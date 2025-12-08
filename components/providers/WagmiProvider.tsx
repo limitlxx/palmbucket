@@ -11,7 +11,16 @@ interface Props {
 }
 
 export function Providers({ children }: Props) {
-  const [queryClient] = useState(() => new QueryClient())
+  // Configure QueryClient with error handling
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: 3,
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+        staleTime: 5000,
+      },
+    },
+  }))
 
   return (
     <WagmiProvider config={wagmiConfig}>
