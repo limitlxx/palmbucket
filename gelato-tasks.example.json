@@ -1,0 +1,21 @@
+{
+  "timestamp": "2024-12-08T00:00:00.000Z",
+  "instructions": "Use these configurations to create Gelato tasks at https://app.gelato.network",
+  "tasks": [
+    {
+      "name": "SweepKeeper-0x6a62...1a4a",
+      "contractAddress": "0x772CAEAA455fF9Fc5F2e199C0420898e3C706097",
+      "userAddress": "0x6a62e5bA998874A5c8A5B3b3A1add5c9E3A31a4a",
+      "checkInterval": 21600,
+      "network": "mantle_sepolia",
+      "chainId": 5003
+    }
+  ],
+  "notes": [
+    "This is an example configuration file",
+    "Run 'npm run hardhat:create-gelato-task' to generate actual configurations",
+    "Each task monitors one user for month-end sweep eligibility",
+    "Check interval is 21600 seconds (6 hours)",
+    "Tasks should be created at https://app.gelato.network/new-task"
+  ]
+}

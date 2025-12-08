@@ -1,0 +1,24 @@
+{
+  "mantle_sepolia_5003": {
+    "network": "mantle_sepolia",
+    "chainId": 5003,
+    "deployer": "0x6a62e5bA998874A5c8A5B3b3A1add5c9E3A31a4a",
+    "timestamp": "2025-12-07T23:15:00.000Z",
+    "contracts": {
+      "mockUSDC": "0x186B110dD3A58f6160B1E2C24D02Cc34715ABF60",
+      "mockUSDY": "0xb250b35A80a82B352C83ECe42B471203115d9db7",
+      "mockUSDYManager": "0x714a0596AEFdc8fa80E33d4E2673f381537d2a2e",
+      "mockUSDYOracle": "0x9a80B291759AC9c9bA407eBCe631160e5FEC7Ab5",
+      "mockMeth": "0xc5d8834c902C3bd82EF265F1400480EAC3BCd7E1",
+      "mockMethStaking": "0x5d54ec7b3E622735E8bd7BADd67358862Af292fF",
+      "mockLendlePool": "0xcD04Ef3138b91916Fa03CCe194A387073BEF5398",
+      "mockAToken": "0x2001e0A2D2e56092C284F05A11CCf3D95bC2884d",
+      "paymentRouter": "0xE4953d2323cCf5a31f0aa7305E81264Ad6eC3460",
+      "billsVault": "0x43B86Fa95149aa3344F0e3cd932fB9FC019E027D",
+      "savingsVault": "0x1817D029CCF16ffe6cE26506508264909F3BfB1E",
+      "growthVault": "0x8860be31C64557e30B3338bA400b6F483dfB6978",
+      "spendableVault": "0xdF4772c7A9fd17c245111F61026d48B808857626",
+      "sweepKeeper": "0x772CAEAA455fF9Fc5F2e199C0420898e3C706097"
+    }
+  }
+}

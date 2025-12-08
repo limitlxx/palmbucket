@@ -1,0 +1,27 @@
+# Environment files
+.env
+.env.local
+.env*.local
+.kiro/
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
