@@ -3,9 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Hands, Results } from '@mediapipe/hands'
 import { Camera } from '@mediapipe/camera_utils'
-import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils'
-import { HAND_CONNECTIONS } from '@mediapipe/hands'
-import { GestureData, GestureType, HandLandmarks } from '@/types'
+import { GestureData, GestureType } from '@/types'
 
 interface GestureControllerProps {
   onGesture?: (gesture: GestureData) => void
@@ -18,17 +16,19 @@ const SWIPE_COOLDOWN = 500 // milliseconds
 
 export function GestureController({ onGesture }: GestureControllerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isInitialized, setIsInitialized] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [enabled, setEnabled] = useState(false)
   const [isPinching, setIsPinching] = useState(false)
-  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | 'none'>('none')
+  const [cursorPosition, setCursorPosition] = useState<{ x: number; y: number } | null>(null)
+  const [hoveredElement, setHoveredElement] = useState<Element | null>(null)
+  const [actionLog, setActionLog] = useState<string[]>([])
   
   // Track hand position for swipe detection
   const previousPositionRef = useRef<{ x: number; y: number } | null>(null)
   const swipeStartRef = useRef<{ x: number; y: number } | null>(null)
   const lastSwipeTimeRef = useRef<number>(0)
+  const lastPinchStateRef = useRef<boolean>(false)
 
   // Load gesture enabled state from localStorage on mount
   useEffect(() => {
@@ -47,6 +47,32 @@ export function GestureController({ onGesture }: GestureControllerProps) {
     })
   }, [])
 
+  // Add action to log
+  const logAction = useCallback((action: string) => {
+    setActionLog(prev => {
+      const newLog = [action, ...prev].slice(0, 3) // Keep last 3 actions
+      return newLog
+    })
+  }, [])
+
+  // Check what element is under the cursor
+  const getElementAtPosition = useCallback((x: number, y: number): Element | null => {
+    const elements = document.elementsFromPoint(x, y)
+    // Find first clickable element
+    for (const el of elements) {
+      if (
+        el.tagName === 'BUTTON' ||
+        el.tagName === 'A' ||
+        el.getAttribute('role') === 'button' ||
+        el.onclick !== null ||
+        window.getComputedStyle(el).cursor === 'pointer'
+      ) {
+        return el
+      }
+    }
+    return null
+  }, [])
+
   // Dispatch custom gesture events to DOM
   const dispatchGestureEvent = useCallback((gestureType: GestureType, data: GestureData) => {
     const event = new CustomEvent('gesture', {
@@ -56,18 +82,78 @@ export function GestureController({ onGesture }: GestureControllerProps) {
     })
     document.dispatchEvent(event)
     
+    // Log the action
+    const actionText = gestureType === 'pinch' ? '👌 Pinch Click' :
+                      gestureType === 'swipe_right' ? '👉 Swipe Right (Confirm)' :
+                      gestureType === 'swipe_left' ? '👈 Swipe Left (Cancel)' : ''
+    if (actionText) {
+      logAction(actionText)
+    }
+    
     // Also call the callback if provided
     if (onGesture) {
       onGesture(data)
     }
-  }, [onGesture])
+  }, [onGesture, logAction])
+
+  // Handle pinch click on hovered element
+  useEffect(() => {
+    if (isPinching && !lastPinchStateRef.current && hoveredElement && cursorPosition) {
+      // Pinch just started - trigger click
+      const element = hoveredElement as HTMLElement
+      
+      // Log what was clicked
+      const elementText = element.textContent?.trim().substring(0, 30) || element.tagName
+      logAction(`🎯 Clicked: ${elementText}`)
+      
+      // Trigger the click - handle different element types
+      try {
+        if (typeof element.click === 'function') {
+          element.click()
+        } else {
+          // Fallback: dispatch a click event
+          const clickEvent = new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+          })
+          element.dispatchEvent(clickEvent)
+        }
+      } catch (err) {
+        console.error('Failed to click element:', err)
+      }
+      
+      // Dispatch pinch gesture event
+      const gestureData: GestureData = {
+        landmarks: [],
+        confidence: 0.8,
+        gestureType: 'pinch',
+        timestamp: Date.now()
+      }
+      dispatchGestureEvent('pinch', gestureData)
+    }
+    
+    lastPinchStateRef.current = isPinching
+  }, [isPinching, hoveredElement, cursorPosition, dispatchGestureEvent, logAction])
+
+  // Update hovered element when cursor moves
+  useEffect(() => {
+    if (cursorPosition) {
+      const element = getElementAtPosition(cursorPosition.x, cursorPosition.y)
+      setHoveredElement(element)
+    } else {
+      setHoveredElement(null)
+    }
+  }, [cursorPosition, getElementAtPosition])
 
   useEffect(() => {
     if (!enabled) {
       // Reset state when disabled
       setIsInitialized(false)
       setIsPinching(false)
-      setSwipeDirection('none')
+      setCursorPosition(null)
+      setHoveredElement(null)
+      setActionLog([])
       previousPositionRef.current = null
       swipeStartRef.current = null
       return
@@ -115,51 +201,31 @@ export function GestureController({ onGesture }: GestureControllerProps) {
     }
 
     const onResults = (results: Results) => {
-      if (!canvasRef.current) return
-
-      const canvas = canvasRef.current
-      const ctx = canvas.getContext('2d')
-      if (!ctx) return
-
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      // Draw video frame
-      if (videoRef.current) {
-        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height)
-      }
-
       // Process hand landmarks
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         const landmarks = results.multiHandLandmarks[0]
         
-        // Draw hand landmarks
-        drawConnectors(ctx, landmarks, HAND_CONNECTIONS, { color: '#00FF00', lineWidth: 5 })
-        drawLandmarks(ctx, landmarks, { color: '#FF0000', lineWidth: 2 })
+        // Get index finger tip position (landmark 8)
+        const indexTip = landmarks[8]
+        
+        // Convert normalized coordinates to screen coordinates and flip horizontally for mirror effect
+        const screenX = window.innerWidth - (indexTip.x * window.innerWidth)
+        const screenY = indexTip.y * window.innerHeight
+        
+        setCursorPosition({ x: screenX, y: screenY })
 
         // Detect gestures
-        const gestureType = detectGesture(landmarks)
-        
-        if (gestureType !== 'none') {
-          const gestureData: GestureData = {
-            landmarks: [landmarks.map(lm => ({ x: lm.x, y: lm.y, z: lm.z }))],
-            confidence: 0.8,
-            gestureType,
-            timestamp: Date.now()
-          }
-          
-          dispatchGestureEvent(gestureType, gestureData)
-        }
+        detectGesture(landmarks)
       } else {
-        // No hand detected - reset swipe tracking
+        // No hand detected
+        setCursorPosition(null)
         previousPositionRef.current = null
         swipeStartRef.current = null
-        setSwipeDirection('none')
         setIsPinching(false)
       }
     }
 
-    const detectGesture = (landmarks: any[]): GestureType => {
+    const detectGesture = (landmarks: any[]) => {
       // Pinch detection: distance between index finger tip and thumb tip
       const thumbTip = landmarks[4]
       const indexTip = landmarks[8]
@@ -171,10 +237,6 @@ export function GestureController({ onGesture }: GestureControllerProps) {
       
       const currentlyPinching = distance < PINCH_THRESHOLD
       setIsPinching(currentlyPinching)
-      
-      if (currentlyPinching) {
-        return 'pinch'
-      }
 
       // Swipe detection: check if all 5 fingers are extended (open palm)
       const thumbTipY = landmarks[4].y
@@ -205,11 +267,11 @@ export function GestureController({ onGesture }: GestureControllerProps) {
         if (!swipeStartRef.current) {
           swipeStartRef.current = currentPosition
           previousPositionRef.current = currentPosition
-          return 'none'
+          return
         }
         
-        // Calculate movement from start
-        const deltaX = currentPosition.x - swipeStartRef.current.x
+        // Calculate movement from start - flip deltaX for mirror correction
+        const deltaX = -(currentPosition.x - swipeStartRef.current.x)
         const deltaY = Math.abs(currentPosition.y - swipeStartRef.current.y)
         
         // Check if movement is primarily horizontal and exceeds threshold
@@ -219,13 +281,14 @@ export function GestureController({ onGesture }: GestureControllerProps) {
           swipeStartRef.current = null
           previousPositionRef.current = null
           
-          if (deltaX > 0) {
-            setSwipeDirection('right')
-            return 'swipe_right'
-          } else {
-            setSwipeDirection('left')
-            return 'swipe_left'
+          const gestureType = deltaX > 0 ? 'swipe_right' : 'swipe_left'
+          const gestureData: GestureData = {
+            landmarks: [landmarks.map((lm: any) => ({ x: lm.x, y: lm.y, z: lm.z }))],
+            confidence: 0.8,
+            gestureType,
+            timestamp: Date.now()
           }
+          dispatchGestureEvent(gestureType, gestureData)
         }
         
         previousPositionRef.current = currentPosition
@@ -233,10 +296,7 @@ export function GestureController({ onGesture }: GestureControllerProps) {
         // Reset swipe tracking when hand closes
         swipeStartRef.current = null
         previousPositionRef.current = null
-        setSwipeDirection('none')
       }
-
-      return 'none'
     }
 
     initializeGestureRecognition()
@@ -252,22 +312,25 @@ export function GestureController({ onGesture }: GestureControllerProps) {
   }, [enabled, dispatchGestureEvent])
 
   return (
-    <div className="fixed top-4 right-4 z-50">
+    <>
       {/* Toggle button */}
-      <button
-        onClick={toggleGesture}
-        className={`mb-2 px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${
-          enabled 
-            ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg' 
-            : 'bg-gray-500 hover:bg-gray-600 text-white shadow-md'
-        }`}
-        aria-label={enabled ? 'Disable gesture control' : 'Enable gesture control'}
-      >
-        {enabled ? '👋 Gestures ON' : '🖱️ Gestures OFF'}
-      </button>
+      <div className="fixed top-4 right-4 z-50">
+        <button
+          onClick={toggleGesture}
+          className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 shadow-lg ${
+            enabled 
+              ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white' 
+              : 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white'
+          }`}
+          aria-label={enabled ? 'Disable gesture control' : 'Enable gesture control'}
+        >
+          {enabled ? '👋 Gestures ON' : '🖱️ Gestures OFF'}
+        </button>
+      </div>
 
       {enabled && (
-        <div className="relative">
+        <>
+          {/* Hidden video element for camera feed */}
           <video
             ref={videoRef}
             className="hidden"
@@ -275,42 +338,120 @@ export function GestureController({ onGesture }: GestureControllerProps) {
             muted
             playsInline
           />
-          <canvas
-            ref={canvasRef}
-            width={320}
-            height={240}
-            className="border border-gray-300 rounded-lg bg-black"
-          />
           
-          {/* Gesture status indicators */}
-          <div className="absolute bottom-2 left-2 flex gap-2">
-            {/* Pinch indicator */}
-            <div className={`px-2 py-1 rounded text-xs font-semibold ${
-              isPinching ? 'bg-green-500 text-white' : 'bg-gray-500 text-gray-300'
+          {/* AR Cursor with Orbiting Dots and Ribbons */}
+          {cursorPosition && (
+            <div
+              className="fixed pointer-events-none z-[9999] transition-transform duration-75"
+              style={{
+                left: `${cursorPosition.x}px`,
+                top: `${cursorPosition.y}px`,
+                transform: 'translate(-50%, -50%)'
+              }}
+            >
+              {/* Ribbon trail effect */}
+              <div className={`absolute inset-0 rounded-full transition-all duration-300 ${
+                hoveredElement 
+                  ? 'w-20 h-20 -m-10 bg-gradient-to-r from-green-400/20 via-green-300/10 to-transparent animate-spin-slow' 
+                  : 'w-16 h-16 -m-8 bg-gradient-to-r from-blue-400/20 via-blue-300/10 to-transparent animate-spin-slow'
+              }`} style={{ animationDuration: '3s' }} />
+              
+              {/* Outer glow ring */}
+              <div className={`absolute inset-0 rounded-full transition-all duration-200 ${
+                hoveredElement 
+                  ? 'w-16 h-16 -m-8 bg-green-400/30 animate-pulse' 
+                  : 'w-12 h-12 -m-6 bg-blue-400/20'
+              }`} />
+              
+              {/* Orbiting dots */}
+              <div className="absolute inset-0 w-12 h-12 -m-6 animate-spin" style={{ animationDuration: '2s' }}>
+                <div className="absolute top-0 left-1/2 w-2 h-2 -ml-1 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50" />
+              </div>
+              <div className="absolute inset-0 w-12 h-12 -m-6 animate-spin" style={{ animationDuration: '2.5s', animationDirection: 'reverse' }}>
+                <div className="absolute bottom-0 left-1/2 w-2 h-2 -ml-1 bg-purple-400 rounded-full shadow-lg shadow-purple-400/50" />
+              </div>
+              <div className="absolute inset-0 w-12 h-12 -m-6 animate-spin" style={{ animationDuration: '3s' }}>
+                <div className="absolute left-0 top-1/2 w-2 h-2 -mt-1 bg-pink-400 rounded-full shadow-lg shadow-pink-400/50" />
+              </div>
+              
+              {/* Main cursor orb with enhanced glow */}
+              <div className={`relative w-8 h-8 rounded-full transition-all duration-200 ${
+                isPinching 
+                  ? 'bg-gradient-to-br from-green-400 to-green-600 scale-75 shadow-2xl shadow-green-500/70 animate-pulse' 
+                  : hoveredElement
+                  ? 'bg-gradient-to-br from-green-300 to-green-500 scale-110 shadow-2xl shadow-green-400/70'
+                  : 'bg-gradient-to-br from-blue-400 to-blue-600 shadow-2xl shadow-blue-500/70'
+              }`}>
+                {/* Inner highlight */}
+                <div className="absolute top-1.5 left-1.5 w-3 h-3 bg-white/70 rounded-full blur-sm" />
+                <div className="absolute top-2 left-2 w-2 h-2 bg-white rounded-full" />
+              </div>
+              
+              {/* Hover indicator */}
+              {hoveredElement && !isPinching && (
+                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/90 text-white text-xs px-3 py-1.5 rounded-full shadow-lg animate-bounce">
+                  👆 Pinch to click
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Action log at bottom left */}
+          {actionLog.length > 0 && (
+            <div className="fixed bottom-4 left-4 z-50 space-y-2">
+              {actionLog.map((action, index) => (
+                <div
+                  key={`${action}-${index}`}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium bg-black/80 text-white shadow-lg transition-all duration-300 ${
+                    index === 0 ? 'scale-100 opacity-100' : 'scale-95 opacity-70'
+                  }`}
+                  style={{ 
+                    transform: `translateY(${index * -5}px)`,
+                    zIndex: 50 - index
+                  }}
+                >
+                  {action}
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {/* Status indicator at bottom right */}
+          <div className="fixed bottom-4 right-4 z-50 space-y-2">
+            <div className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
+              isPinching 
+                ? 'bg-green-500 text-white shadow-lg scale-110' 
+                : cursorPosition
+                ? 'bg-blue-500/80 text-white shadow-md'
+                : 'bg-gray-700/80 text-gray-300 shadow-md'
             }`}>
-              👌 Pinch
+              {isPinching ? '👌 Pinching!' : cursorPosition ? '👋 Hand Detected' : '🖐️ Show Your Hand'}
             </div>
             
-            {/* Swipe indicator */}
-            {swipeDirection !== 'none' && (
-              <div className="px-2 py-1 rounded text-xs font-semibold bg-blue-500 text-white animate-pulse">
-                {swipeDirection === 'right' ? '👉 Swipe Right' : '👈 Swipe Left'}
+            {/* Debug info */}
+            {isInitialized && (
+              <div className="px-2 py-1 rounded text-xs bg-black/60 text-white">
+                Camera: {isInitialized ? '✓' : '✗'} | Cursor: {cursorPosition ? `${Math.round(cursorPosition.x)},${Math.round(cursorPosition.y)}` : 'None'}
               </div>
             )}
           </div>
           
+          {/* Error message */}
           {error && (
-            <div className="absolute top-0 left-0 w-full h-full bg-red-500 bg-opacity-75 flex items-center justify-center text-white text-sm p-2 rounded-lg">
-              {error}
+            <div className="fixed top-20 right-4 z-50 max-w-sm bg-red-500 text-white text-sm p-4 rounded-lg shadow-lg">
+              <p className="font-semibold">Camera Error</p>
+              <p className="mt-1">{error}</p>
             </div>
           )}
+          
+          {/* Initializing message */}
           {!isInitialized && !error && (
-            <div className="absolute top-0 left-0 w-full h-full bg-blue-500 bg-opacity-75 flex items-center justify-center text-white text-sm">
-              Initializing camera...
+            <div className="fixed top-20 right-4 z-50 bg-blue-500 text-white text-sm px-4 py-3 rounded-lg shadow-lg animate-pulse">
+              <p className="font-semibold">📷 Initializing camera...</p>
             </div>
           )}
-        </div>
+        </>
       )}
-    </div>
+    </>
   )
 }
