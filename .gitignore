@@ -3,6 +3,7 @@
 .env.local
 .env*.local
 .kiro/
+.next/
 
 # Dependencies
 node_modules/
