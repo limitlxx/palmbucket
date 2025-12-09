@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { AlertTriangle, RefreshCw, X, ArrowLeftRight, Wifi, AlertCircle } from 'lucide-react'
 import { BaseError } from 'wagmi'
 
 interface MultiAssetDepositError {
@@ -152,80 +154,76 @@ export function MultiAssetDepositErrorDisplay({
   const getErrorIcon = () => {
     switch (error.type) {
       case 'swap':
-        return (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-            />
-          </svg>
-        )
+        return <ArrowLeftRight className="w-6 h-6" />
       case 'network':
-        return (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3"
-            />
-          </svg>
-        )
+        return <Wifi className="w-6 h-6" />
       default:
-        return (
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        )
+        return <AlertCircle className="w-6 h-6" />
     }
   }
 
   return (
-    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-      <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 text-red-600">{getErrorIcon()}</div>
-        <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-semibold text-red-900 mb-1">{error.userMessage}</h4>
-          {error.suggestedAction && (
-            <p className="text-xs text-red-700 mb-3">{error.suggestedAction}</p>
-          )}
-          <div className="flex gap-2">
-            {error.canRetry && onRetry && (
-              <button
-                onClick={onRetry}
-                className="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-700 transition-colors"
-              >
-                Try Again
-              </button>
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.3 }}
+        className="glass bg-red-500/10 border border-red-500/40 rounded-lg p-4"
+      >
+        <div className="flex items-start gap-3">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+            className="flex-shrink-0 text-red-400"
+          >
+            {getErrorIcon()}
+          </motion.div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2 mb-1">
+              <h4 className="text-sm font-semibold text-foreground">{error.userMessage}</h4>
+              {onDismiss && (
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={onDismiss}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label="Dismiss error"
+                >
+                  <X className="w-4 h-4" />
+                </motion.button>
+              )}
+            </div>
+            {error.suggestedAction && (
+              <p className="text-xs text-muted-foreground mb-3">{error.suggestedAction}</p>
             )}
-            {onDismiss && (
-              <button
-                onClick={onDismiss}
-                className="px-3 py-1.5 bg-white text-red-600 border border-red-300 text-xs font-medium rounded hover:bg-red-50 transition-colors"
-              >
-                Dismiss
-              </button>
+            <div className="flex gap-2">
+              {error.canRetry && onRetry && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={onRetry}
+                  className="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition-colors flex items-center gap-1.5"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  Try Again
+                </motion.button>
+              )}
+            </div>
+            {process.env.NODE_ENV === 'development' && (
+              <details className="mt-3">
+                <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
+                  Technical Details
+                </summary>
+                <pre className="mt-2 text-xs text-muted-foreground bg-black/20 border border-white/10 p-2 rounded-lg overflow-auto max-h-32">
+                  {error.message}
+                </pre>
+              </details>
             )}
           </div>
-          {process.env.NODE_ENV === 'development' && (
-            <details className="mt-2">
-              <summary className="text-xs text-red-600 cursor-pointer hover:text-red-700">
-                Technical Details
-              </summary>
-              <pre className="mt-1 text-xs text-red-800 bg-red-100 p-2 rounded overflow-auto max-h-32">
-                {error.message}
-              </pre>
-            </details>
-          )}
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </AnimatePresence>
   )
 }

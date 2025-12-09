@@ -1,6 +1,8 @@
 'use client'
 
 import { Component, ReactNode } from 'react'
+import { motion } from 'framer-motion'
+import { Wallet, RefreshCw, AlertCircle, ExternalLink } from 'lucide-react'
 
 interface RainbowKitErrorBoundaryProps {
   children: ReactNode

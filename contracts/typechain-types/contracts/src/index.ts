@@ -9,6 +9,8 @@ import type * as interfaces from "./interfaces";
 export type { interfaces };
 import type * as mocks from "./mocks";
 export type { mocks };
+import type * as upgradeable from "./upgradeable";
+export type { upgradeable };
 import type * as utils from "./utils";
 export type { utils };
 import type * as vaults from "./vaults";

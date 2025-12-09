@@ -2,6 +2,9 @@
 
 import { useState, useCallback } from 'react'
 import { useAccount, useBalance, useChainId } from 'wagmi'
+import { motion } from 'framer-motion'
+import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 import { BucketCard, BucketErrorBoundary } from '@/components/bucket'
 import { WalletConnectButton } from '@/components/wallet/ConnectButton'
 import { TransferModal } from '@/components/transfer'
@@ -9,11 +12,12 @@ import { SweepNotifications, SweepHistory } from '@/components/sweep'
 import { YieldRateComparison } from '@/components/yield/YieldRateComparison'
 import { PortfolioSummary } from '@/components/portfolio'
 import { PullToRefreshIndicator } from '@/components/ui/PullToRefreshIndicator'
+import { MultiAssetDepositModal } from '@/components/deposit/MultiAssetDepositModal'
 import { getContractAddresses } from '@/lib/contracts/addresses'
-import { formatEther } from 'viem'
+import { formatEther, Address } from 'viem'
 import { useBucketVault } from '@/lib/hooks/useBucketVault'
 import { useBucketTransfer } from '@/lib/hooks/useBucketTransfer'
-import { useHapticFeedback, usePullToRefresh, useIsMobile, useMobileAnimations } from '@/lib/hooks'
+import { useHapticFeedback, usePullToRefresh, useIsMobile } from '@/lib/hooks'
 import { BucketType } from '@/types'
 
 export function Dashboard() {
@@ -24,7 +28,6 @@ export function Dashboard() {
   // Mobile optimizations
   const { triggerHaptic } = useHapticFeedback()
   const isMobile = useIsMobile()
-  const { shouldAnimate, animationDuration } = useMobileAnimations()
   
   // Transfer modal state
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false)
@@ -33,6 +36,10 @@ export function Dashboard() {
   const [transferSourceBalance, setTransferSourceBalance] = useState<bigint>(0n)
   const [showDestinationSelector, setShowDestinationSelector] = useState(false)
   
+  // Deposit modal state
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
+  const [depositBucket, setDepositBucket] = useState<BucketType | null>(null)
+  
   const { 
     executeTransfer, 
     estimateFees, 
@@ -40,16 +47,15 @@ export function Dashboard() {
     isComplete,
     getStatusMessage,
     conversionInfo,
-    error: transferError
   } = useBucketTransfer()
 
-  // Get native balance for total portfolio calculation
-  const { data: nativeBalance } = useBalance({
-    address,
-    query: {
-      enabled: !!address,
-    },
-  })
+  // Bucket vault addresses
+  const bucketVaultAddresses = {
+    bills: contractAddresses?.buckets.bills,
+    savings: contractAddresses?.buckets.savings,
+    growth: contractAddresses?.buckets.growth,
+    spendable: contractAddresses?.buckets.spendable,
+  }
 
   // Get bucket vault data for portfolio calculation
   const billsVault = useBucketVault(contractAddresses?.buckets.bills)
@@ -74,69 +80,38 @@ export function Dashboard() {
   
   const { isRefreshing, pullDistance } = usePullToRefresh(handleRefresh)
 
-  // Calculate total portfolio value
-  const calculateTotalPortfolio = () => {
-    let total = 0
-    
-    if (billsVault.shareBalance) {
-      total += Number(formatEther(billsVault.shareBalance))
-    }
-    if (savingsVault.shareBalance) {
-      total += Number(formatEther(savingsVault.shareBalance))
-    }
-    if (growthVault.shareBalance) {
-      total += Number(formatEther(growthVault.shareBalance))
-    }
-    if (spendableVault.shareBalance) {
-      total += Number(formatEther(spendableVault.shareBalance))
-    }
-    
-    return total.toFixed(2)
+  // Handle deposit initiation
+  const handleDepositInitiate = (bucket: BucketType) => {
+    triggerHaptic('light')
+    setDepositBucket(bucket)
+    setIsDepositModalOpen(true)
   }
 
-  // Calculate yield summary
-  const calculateYieldSummary = () => {
-    const yields = [
-      { name: 'Bills', rate: billsVault.yieldRate, balance: billsVault.shareBalance },
-      { name: 'Savings', rate: savingsVault.yieldRate, balance: savingsVault.shareBalance },
-      { name: 'Growth', rate: growthVault.yieldRate, balance: growthVault.shareBalance },
-    ]
-
-    let totalYieldEarning = 0
-    let weightedYieldRate = 0
-    let totalBalance = 0
-
-    yields.forEach(({ rate, balance }) => {
-      if (rate && balance) {
-        const balanceNum = Number(formatEther(balance))
-        const rateNum = Number(rate) / 100
-        totalYieldEarning += balanceNum * (rateNum / 100) // Monthly yield approximation
-        weightedYieldRate += balanceNum * rateNum
-        totalBalance += balanceNum
-      }
-    })
-
-    const avgYieldRate = totalBalance > 0 ? (weightedYieldRate / totalBalance).toFixed(2) : '0.00'
-
-    return {
-      monthlyYield: totalYieldEarning.toFixed(2),
-      avgYieldRate,
-    }
+  // Close deposit modal
+  const handleCloseDepositModal = () => {
+    setIsDepositModalOpen(false)
+    setDepositBucket(null)
   }
 
   // Authentication gate - show connect wallet if not connected
   if (!isConnected) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-blue-50 to-purple-50">
-        <div className="text-center max-w-md">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+        {/* Background gradient orbs */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 -left-4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob" />
+          <div className="absolute top-0 -right-4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000" />
+          <div className="absolute -bottom-8 left-20 w-96 h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000" />
+        </div>
+        <div className="text-center flex flex-col items-center justify-center max-w-md relative z-10">
+          <h1 className="text-4xl font-bold text-foreground mb-4">
             PalmBudget
           </h1>
-          <p className="text-lg text-gray-600 mb-8">
+          <p className="text-lg text-muted-foreground mb-8">
             Connect your wallet to access your gesture-controlled budgeting dashboard
           </p>
           <WalletConnectButton />
-          <p className="text-sm text-gray-500 mt-4">
+          <p className="text-sm text-muted-foreground mt-4">
             Powered by RainbowKit on Mantle Network
           </p>
         </div>
@@ -147,24 +122,21 @@ export function Dashboard() {
   // Show error if no contract addresses available
   if (!contractAddresses) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6">
-        <div className="text-center max-w-md">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="text-center max-w-md glass p-8">
+          <h2 className="text-2xl font-bold text-red-400 mb-4">
             Network Error
           </h2>
-          <p className="text-gray-600 mb-4">
+          <p className="text-muted-foreground mb-4">
             Unable to load contract addresses for the current network.
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             Please ensure you're connected to Mantle Network.
           </p>
         </div>
       </div>
     )
   }
-
-  const totalPortfolio = calculateTotalPortfolio()
-  const yieldSummary = calculateYieldSummary()
 
   // Handle transfer initiation from bucket card
   const handleTransferInitiate = (sourceBucket: BucketType, sourceBalance: bigint) => {
@@ -216,206 +188,226 @@ export function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+      {/* Background gradient orbs */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 -left-4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob" />
+        <div className="absolute top-0 -right-4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000" />
+        <div className="absolute -bottom-8 left-20 w-96 h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000" />
+      </div>
+
       {/* Pull to refresh indicator */}
       {isMobile && <PullToRefreshIndicator pullDistance={pullDistance} isRefreshing={isRefreshing} />}
-      
-      {/* Header - Mobile Optimized */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className={`font-bold text-gray-900 ${isMobile ? 'text-xl' : 'text-2xl'}`}>
-                PalmBudget
-              </h1>
-              <span className="ml-2 sm:ml-3 px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
-                {isMobile ? '✓' : 'Connected'}
-              </span>
+
+      <div className="relative z-10 container mx-auto px-4 py-8 max-w-6xl">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-4xl font-bold text-foreground mb-2">Dashboard</h1>
+              <p className="text-muted-foreground">
+                Manage your buckets and track your portfolio
+              </p>
             </div>
-            
-            {/* Navigation - Hidden on mobile */}
-            <nav className="hidden md:flex space-x-8">
-              <a href="#dashboard" className="text-gray-900 hover:text-blue-600 px-3 py-2 text-sm font-medium">
-                Dashboard
-              </a>
-              <a href="#settings" className="text-gray-500 hover:text-blue-600 px-3 py-2 text-sm font-medium">
-                Settings
-              </a>
-            </nav>
-
-            {/* Wallet Info - Mobile Optimized */}
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              {!isMobile && <SweepNotifications />}
-              <WalletConnectButton />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Portfolio Summary with comprehensive analytics */}
-        <div className="mb-8">
-          <PortfolioSummary />
-        </div>
-
-        {/* Bucket Cards Grid - Mobile Optimized */}
-        <div className="mb-8">
-          <h2 className={`font-semibold text-gray-900 mb-4 sm:mb-6 ${isMobile ? 'text-lg' : 'text-xl'}`}>
-            Your Buckets
-            {showDestinationSelector && (
-              <span className={`ml-2 sm:ml-4 text-blue-600 font-normal ${isMobile ? 'text-xs block mt-1' : 'text-sm'}`}>
-                👆 Select destination bucket for transfer
-              </span>
-            )}
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <BucketErrorBoundary bucketType="bills">
-              <BucketCard 
-                type="bills" 
-                onTransferInitiate={handleTransferInitiate}
-                className={showDestinationSelector && transferSource !== 'bills' ? 'ring-2 ring-blue-500 cursor-pointer' : ''}
-                onClick={showDestinationSelector && transferSource !== 'bills' ? () => handleDestinationSelect('bills') : undefined}
-              />
-            </BucketErrorBoundary>
-            
-            <BucketErrorBoundary bucketType="savings">
-              <BucketCard 
-                type="savings" 
-                onTransferInitiate={handleTransferInitiate}
-                className={showDestinationSelector && transferSource !== 'savings' ? 'ring-2 ring-blue-500 cursor-pointer' : ''}
-                onClick={showDestinationSelector && transferSource !== 'savings' ? () => handleDestinationSelect('savings') : undefined}
-              />
-            </BucketErrorBoundary>
-            
-            <BucketErrorBoundary bucketType="growth">
-              <BucketCard 
-                type="growth" 
-                onTransferInitiate={handleTransferInitiate}
-                className={showDestinationSelector && transferSource !== 'growth' ? 'ring-2 ring-blue-500 cursor-pointer' : ''}
-                onClick={showDestinationSelector && transferSource !== 'growth' ? () => handleDestinationSelect('growth') : undefined}
-              />
-            </BucketErrorBoundary>
-            
-            <BucketErrorBoundary bucketType="spendable">
-              <BucketCard 
-                type="spendable" 
-                onTransferInitiate={handleTransferInitiate}
-                className={showDestinationSelector && transferSource !== 'spendable' ? 'ring-2 ring-blue-500 cursor-pointer' : ''}
-                onClick={showDestinationSelector && transferSource !== 'spendable' ? () => handleDestinationSelect('spendable') : undefined}
-              />
-            </BucketErrorBoundary>
-          </div>
-          
-          {showDestinationSelector && (
-            <div className="mt-4 text-center">
-              <button
-                onClick={() => {
-                  setShowDestinationSelector(false)
-                  setTransferSource(null)
-                }}
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 underline"
+            <div className="flex items-center gap-4">
+              <Link
+                href="/mint"
+                className="flex items-center px-4 py-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 rounded-lg hover:bg-emerald-500/30 transition-colors text-sm font-semibold"
               >
-                Cancel Transfer
-              </button>
+                🪙 Mint Tokens
+              </Link>
+              <Link
+                href="/settings"
+                className="flex items-center px-4 py-2 bg-background border border-white/10 rounded-lg text-foreground hover:border-white/20 transition-colors text-sm font-semibold"
+              >
+                ⚙️ Settings
+              </Link>
+              <div className="flex items-center">
+                <WalletConnectButton />
+              </div>
             </div>
-          )}
-        </div>
-
-        {/* Transfer Modal */}
-        <TransferModal
-          isOpen={isTransferModalOpen}
-          onClose={handleCloseTransferModal}
-          sourceBucket={transferSource}
-          destinationBucket={transferDestination}
-          sourceBalance={transferSourceBalance}
-          onTransfer={handleTransfer}
-          isTransferring={isTransferring}
-          transferComplete={isComplete}
-          statusMessage={getStatusMessage()}
-          conversionInfo={conversionInfo || undefined}
-          estimatedFees={transferSource && transferDestination ? estimateFees(transferSource, transferDestination) : undefined}
-        />
-
-        {/* Yield Summary Section with Dynamic Tracking */}
-        <div className="mb-8">
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">
-              Yield Performance & Sweep Destination
-            </h2>
-            <YieldRateComparison showDetails={true} />
           </div>
-        </div>
+        </motion.div>
+
+        {/* Main Content */}
+        <div className="space-y-6">
+          {/* Portfolio Summary */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="glass p-6"
+          >
+            <PortfolioSummary />
+          </motion.div>
+
+          {/* Bucket Cards Grid */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="glass p-6"
+          >
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-foreground mb-2">Your Buckets</h2>
+              {showDestinationSelector && (
+                <p className="text-emerald-400 text-sm">
+                  👆 Select destination bucket for transfer
+                </p>
+              )}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <BucketErrorBoundary bucketType="bills">
+                <div className="relative group">
+                  <BucketCard 
+                    type="bills" 
+                    onTransferInitiate={handleTransferInitiate}
+                    className={showDestinationSelector && transferSource !== 'bills' ? 'ring-2 ring-blue-500 cursor-pointer' : ''}
+                    onClick={showDestinationSelector && transferSource !== 'bills' ? () => handleDestinationSelect('bills') : undefined}
+                  />
+                  {!showDestinationSelector && (
+                    <button
+                      onClick={() => handleDepositInitiate('bills')}
+                      className="absolute top-2 right-2 px-3 py-1 bg-blue-500/20 text-blue-400 border border-blue-500/50 rounded-lg hover:bg-blue-500/30 transition-colors text-xs font-semibold opacity-0 group-hover:opacity-100"
+                    >
+                      + Deposit
+                    </button>
+                  )}
+                </div>
+              </BucketErrorBoundary>
+              
+              <BucketErrorBoundary bucketType="savings">
+                <div className="relative group">
+                  <BucketCard 
+                    type="savings" 
+                    onTransferInitiate={handleTransferInitiate}
+                    className={showDestinationSelector && transferSource !== 'savings' ? 'ring-2 ring-emerald-500 cursor-pointer' : ''}
+                    onClick={showDestinationSelector && transferSource !== 'savings' ? () => handleDestinationSelect('savings') : undefined}
+                  />
+                  {!showDestinationSelector && (
+                    <button
+                      onClick={() => handleDepositInitiate('savings')}
+                      className="absolute top-2 right-2 px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 rounded-lg hover:bg-emerald-500/30 transition-colors text-xs font-semibold opacity-0 group-hover:opacity-100"
+                    >
+                      + Deposit
+                    </button>
+                  )}
+                </div>
+              </BucketErrorBoundary>
+              
+              <BucketErrorBoundary bucketType="growth">
+                <div className="relative group">
+                  <BucketCard 
+                    type="growth" 
+                    onTransferInitiate={handleTransferInitiate}
+                    className={showDestinationSelector && transferSource !== 'growth' ? 'ring-2 ring-purple-500 cursor-pointer' : ''}
+                    onClick={showDestinationSelector && transferSource !== 'growth' ? () => handleDestinationSelect('growth') : undefined}
+                  />
+                  {!showDestinationSelector && (
+                    <button
+                      onClick={() => handleDepositInitiate('growth')}
+                      className="absolute top-2 right-2 px-3 py-1 bg-purple-500/20 text-purple-400 border border-purple-500/50 rounded-lg hover:bg-purple-500/30 transition-colors text-xs font-semibold opacity-0 group-hover:opacity-100"
+                    >
+                      + Deposit
+                    </button>
+                  )}
+                </div>
+              </BucketErrorBoundary>
+              
+              <BucketErrorBoundary bucketType="spendable">
+                <div className="relative group">
+                  <BucketCard 
+                    type="spendable" 
+                    onTransferInitiate={handleTransferInitiate}
+                    className={showDestinationSelector && transferSource !== 'spendable' ? 'ring-2 ring-amber-500 cursor-pointer' : ''}
+                    onClick={showDestinationSelector && transferSource !== 'spendable' ? () => handleDestinationSelect('spendable') : undefined}
+                  />
+                  {!showDestinationSelector && (
+                    <button
+                      onClick={() => handleDepositInitiate('spendable')}
+                      className="absolute top-2 right-2 px-3 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/50 rounded-lg hover:bg-amber-500/30 transition-colors text-xs font-semibold opacity-0 group-hover:opacity-100"
+                    >
+                      + Deposit
+                    </button>
+                  )}
+                </div>
+              </BucketErrorBoundary>
+            </div>
+            
+            {showDestinationSelector && (
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => {
+                    setShowDestinationSelector(false)
+                    setTransferSource(null)
+                  }}
+                  className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground underline"
+                >
+                  Cancel Transfer
+                </button>
+              </div>
+            )}
+          </motion.div>
+
+          {/* Yield Summary Section with Dynamic Tracking */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="glass p-6"
+        >
+          <h2 className="text-2xl font-bold text-foreground mb-6">
+            Yield Performance & Sweep Destination
+          </h2>
+          <YieldRateComparison showDetails={true} />
+        </motion.div>
 
         {/* Sweep History */}
-        <div className="mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
           <SweepHistory />
-        </div>
+        </motion.div>
 
-        {/* Quick Actions - Mobile Optimized */}
-        <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
-          <h2 className={`font-semibold text-gray-900 mb-4 ${isMobile ? 'text-lg' : 'text-xl'}`}>
-            Quick Actions
-          </h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <button 
-              onClick={() => triggerHaptic('light')}
-              className="p-3 sm:p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors active:scale-95"
-            >
-              <div className="text-center">
-                <div className={`mb-1 sm:mb-2 ${isMobile ? 'text-xl' : 'text-2xl'}`}>💸</div>
-                <div className={`font-medium text-gray-700 ${isMobile ? 'text-xs' : 'text-sm'}`}>Transfer Funds</div>
-              </div>
-            </button>
-            
-            <button 
-              onClick={() => triggerHaptic('light')}
-              className="p-3 sm:p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors active:scale-95"
-            >
-              <div className="text-center">
-                <div className={`mb-1 sm:mb-2 ${isMobile ? 'text-xl' : 'text-2xl'}`}>⚙️</div>
-                <div className={`font-medium text-gray-700 ${isMobile ? 'text-xs' : 'text-sm'}`}>Split Settings</div>
-              </div>
-            </button>
-            
-            <button 
-              onClick={() => triggerHaptic('light')}
-              className="p-3 sm:p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors active:scale-95"
-            >
-              <div className="text-center">
-                <div className={`mb-1 sm:mb-2 ${isMobile ? 'text-xl' : 'text-2xl'}`}>🤖</div>
-                <div className={`font-medium text-gray-700 ${isMobile ? 'text-xs' : 'text-sm'}`}>Auto-Sweep</div>
-              </div>
-            </button>
-            
-            <button 
-              onClick={() => triggerHaptic('light')}
-              className="p-3 sm:p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-colors active:scale-95"
-            >
-              <div className="text-center">
-                <div className={`mb-1 sm:mb-2 ${isMobile ? 'text-xl' : 'text-2xl'}`}>👋</div>
-                <div className={`font-medium text-gray-700 ${isMobile ? 'text-xs' : 'text-sm'}`}>Gesture Control</div>
-              </div>
-            </button>
-          </div>
+          {/* Sweep Notifications */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <SweepNotifications />
+          </motion.div>
         </div>
-      </main>
+      </div>
 
-      {/* Footer - Mobile Optimized */}
-      <footer className="bg-white border-t mt-8 sm:mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-          <div className="text-center text-gray-500">
-            <p className={isMobile ? 'text-xs' : 'text-sm'}>
-              PalmBudget - Gesture-Controlled Budgeting on Mantle Network
-            </p>
-            {!isMobile && (
-              <p className="mt-1 text-sm">
-                Connected to {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Wallet'}
-              </p>
-            )}
-          </div>
-        </div>
-      </footer>
+      {/* Transfer Modal */}
+      <TransferModal
+        isOpen={isTransferModalOpen}
+        onClose={handleCloseTransferModal}
+        sourceBucket={transferSource}
+        destinationBucket={transferDestination}
+        sourceBalance={transferSourceBalance}
+        onTransfer={handleTransfer}
+        isTransferring={isTransferring}
+        transferComplete={isComplete}
+        statusMessage={getStatusMessage()}
+        conversionInfo={conversionInfo || undefined}
+        estimatedFees={transferSource && transferDestination ? estimateFees(transferSource, transferDestination) : undefined}
+      />
+
+      {/* Deposit Modal */}
+      <MultiAssetDepositModal
+        isOpen={isDepositModalOpen}
+        onClose={handleCloseDepositModal}
+        vaultAddress={depositBucket ? contractAddresses.buckets[depositBucket] : '0x' as Address}
+        vaultName={depositBucket ? depositBucket.charAt(0).toUpperCase() + depositBucket.slice(1) : ''}
+      />
     </div>
   )
 }

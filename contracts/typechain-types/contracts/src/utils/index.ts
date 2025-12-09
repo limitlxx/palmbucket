@@ -2,3 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { SwapHelper } from "./SwapHelper";
+export type { SwapHelperUpgradeable } from "./SwapHelperUpgradeable";

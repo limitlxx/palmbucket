@@ -1,6 +1,8 @@
 'use client'
 
 import { Component, ReactNode } from 'react'
+import { motion } from 'framer-motion'
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 import { BaseError } from 'wagmi'
 
 interface WagmiErrorBoundaryProps {
@@ -105,56 +107,89 @@ export class WagmiErrorBoundary extends Component<WagmiErrorBoundaryProps, Wagmi
       const userMessage = this.getUserFriendlyMessage(this.state.error)
 
       return (
-        <div className="min-h-[400px] flex items-center justify-center p-6">
-          <div className="max-w-md w-full bg-red-50 border border-red-200 rounded-lg p-6">
+        <div className="min-h-[400px] flex items-center justify-center p-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+          {/* Background gradient orbs */}
+          <div className="fixed inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-0 -left-4 w-96 h-96 bg-red-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob" />
+            <div className="absolute top-0 -right-4 w-96 h-96 bg-orange-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000" />
+            <div className="absolute -bottom-8 left-20 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000" />
+          </div>
+          
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="relative z-10 max-w-md w-full glass p-8"
+          >
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0">
-                <svg
-                  className="w-6 h-6 text-red-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-              </div>
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                className="flex-shrink-0 w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center border border-red-500/40"
+              >
+                <AlertTriangle className="w-6 h-6 text-red-400" />
+              </motion.div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-red-900 mb-2">
+                <motion.h3
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-lg font-semibold text-foreground mb-2"
+                >
                   Something went wrong
-                </h3>
-                <p className="text-sm text-red-700 mb-4">{userMessage}</p>
-                <div className="flex gap-3">
-                  <button
+                </motion.h3>
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-sm text-muted-foreground mb-4 leading-relaxed"
+                >
+                  {userMessage}
+                </motion.p>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="flex gap-3"
+                >
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={this.reset}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors"
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
                   >
+                    <RefreshCw className="w-4 h-4" />
                     Try Again
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => window.location.reload()}
-                    className="px-4 py-2 bg-white text-red-600 border border-red-300 rounded-md text-sm font-medium hover:bg-red-50 transition-colors"
+                    className="px-4 py-2 border border-white/20 text-foreground rounded-lg text-sm font-medium hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
                   >
-                    Refresh Page
-                  </button>
-                </div>
+                    <Home className="w-4 h-4" />
+                    Refresh
+                  </motion.button>
+                </motion.div>
                 {process.env.NODE_ENV === 'development' && (
-                  <details className="mt-4">
-                    <summary className="text-xs text-red-600 cursor-pointer hover:text-red-700">
+                  <motion.details
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6 }}
+                    className="mt-4"
+                  >
+                    <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
                       Technical Details
                     </summary>
-                    <pre className="mt-2 text-xs text-red-800 bg-red-100 p-2 rounded overflow-auto max-h-40">
+                    <pre className="mt-2 text-xs text-muted-foreground bg-black/20 border border-white/10 p-3 rounded-lg overflow-auto max-h-40">
                       {this.state.error.stack}
                     </pre>
-                  </details>
+                  </motion.details>
                 )}
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       )
     }

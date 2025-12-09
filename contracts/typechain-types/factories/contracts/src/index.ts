@@ -5,6 +5,7 @@ export * as sweepKeeperSol from "./SweepKeeper.sol";
 export * as testSol from "./Test.sol";
 export * as interfaces from "./interfaces";
 export * as mocks from "./mocks";
+export * as upgradeable from "./upgradeable";
 export * as utils from "./utils";
 export * as vaults from "./vaults";
 export { BucketVault__factory } from "./BucketVault__factory";

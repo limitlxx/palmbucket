@@ -101,19 +101,19 @@ export function DepositQuotePreview({
       : 0
 
   return (
-    <div className={`bg-gray-50 rounded-lg p-4 space-y-3 ${className}`}>
+    <div className={`glass border border-white/10 rounded-lg p-4 space-y-3 ${className}`}>
       <div className="flex items-center justify-between text-sm">
-        <span className="text-gray-600">Quote Preview</span>
+        <span className="text-muted-foreground">Quote Preview</span>
         {isLoadingQuote && (
-          <div className="flex items-center gap-2 text-blue-600">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+          <div className="flex items-center gap-2 text-blue-400">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
             <span>Fetching quote...</span>
           </div>
         )}
       </div>
 
       {quoteError && (
-        <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+        <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 p-3 rounded-md">
           Error fetching quote. Please try again.
         </div>
       )}
@@ -122,30 +122,30 @@ export function DepositQuotePreview({
         <>
           {/* Base Asset Amount */}
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Expected Base Asset</span>
-            <span className="text-sm font-medium text-gray-900">
+            <span className="text-sm text-muted-foreground">Expected Base Asset</span>
+            <span className="text-sm font-medium text-foreground">
               {formatUnits(baseAssetAmount, 18).slice(0, 10)} USDC
             </span>
           </div>
 
           {/* Shares to Receive */}
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Shares to Receive</span>
-            <span className="text-sm font-medium text-gray-900">
+            <span className="text-sm text-muted-foreground">Shares to Receive</span>
+            <span className="text-sm font-medium text-foreground">
               {formatUnits(shares, 18).slice(0, 10)}
             </span>
           </div>
 
           {/* Slippage Tolerance */}
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Slippage Tolerance</span>
-            <span className="text-sm font-medium text-gray-900">{slippageTolerance}%</span>
+            <span className="text-sm text-muted-foreground">Slippage Tolerance</span>
+            <span className="text-sm font-medium text-foreground">{slippageTolerance}%</span>
           </div>
 
           {/* Minimum Received */}
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Minimum Base Asset</span>
-            <span className="text-sm font-medium text-gray-900">
+            <span className="text-sm text-muted-foreground">Minimum Base Asset</span>
+            <span className="text-sm font-medium text-foreground">
               {formatUnits(minBaseAssetAmount, 18).slice(0, 10)} USDC
             </span>
           </div>
@@ -153,14 +153,14 @@ export function DepositQuotePreview({
           {/* Price Impact */}
           {!selectedToken.isNative && selectedToken.address !== vaultAddress && (
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Price Impact</span>
+              <span className="text-sm text-muted-foreground">Price Impact</span>
               <span
                 className={`text-sm font-medium ${
                   Math.abs(priceImpact) > 5
-                    ? 'text-red-600'
+                    ? 'text-red-400'
                     : Math.abs(priceImpact) > 2
-                    ? 'text-yellow-600'
-                    : 'text-green-600'
+                    ? 'text-yellow-400'
+                    : 'text-emerald-400'
                 }`}
               >
                 {priceImpact > 0 ? '+' : ''}
@@ -171,16 +171,16 @@ export function DepositQuotePreview({
 
           {/* Swap Route Info */}
           {!selectedToken.isNative && selectedToken.address !== vaultAddress && (
-            <div className="pt-3 border-t border-gray-200">
-              <div className="text-xs text-gray-500 mb-2">Swap Route</div>
+            <div className="pt-3 border-t border-white/10">
+              <div className="text-xs text-muted-foreground mb-2">Swap Route</div>
               <div className="flex items-center gap-2 text-xs">
-                <span className="px-2 py-1 bg-white rounded border border-gray-200 font-medium">
+                <span className="px-2 py-1 glass rounded border border-white/10 font-medium text-foreground">
                   {selectedToken.symbol}
                 </span>
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-                <span className="px-2 py-1 bg-white rounded border border-gray-200 font-medium">
+                <span className="px-2 py-1 glass rounded border border-white/10 font-medium text-foreground">
                   USDC
                 </span>
               </div>
@@ -189,7 +189,7 @@ export function DepositQuotePreview({
 
           {/* Warning for high slippage */}
           {Math.abs(priceImpact) > 5 && (
-            <div className="text-xs text-red-600 bg-red-50 p-2 rounded-md">
+            <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 p-2 rounded-md">
               ⚠️ High price impact detected. Consider reducing deposit amount.
             </div>
           )}

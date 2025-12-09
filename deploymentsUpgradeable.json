@@ -1,0 +1,22 @@
+{
+  "mantle_sepolia_5003": {
+    "network": "mantle_sepolia",
+    "chainId": "5003",
+    "deployer": "0x6a62e5bA998874A5c8A5B3b3A1add5c9E3A31a4a",
+    "timestamp": "2025-12-09T21:20:03.242Z",
+    "contracts": {
+      "mockUSDC": "0x186B110dD3A58f6160B1E2C24D02Cc34715ABF60",
+      "mockLendle": "0x0000000000000000000000000000000000000000",
+      "mockUSDY": "0x0000000000000000000000000000000000000000",
+      "mockMeth": "0x0000000000000000000000000000000000000000",
+      "mockDEXRouter": "0x0000000000000000000000000000000000000000",
+      "billsVault": "0x9C5e240471a1c3CaF34Bfe73ccb4C8623Af4f570",
+      "savingsVault": "0xc731bD4eFd35C20668136cb03927DF743c45a535",
+      "growthVault": "0x4A8E9d7753C249D41963F999de7C0CFE20CC8475",
+      "spendableVault": "0xAb2EFEe58CCfB8Cd56B68BEdc9001D7caB81d532",
+      "paymentRouter": "0x7CD3dc31f9C4fFcd1F26a93Cc373AaBe9e4b0491",
+      "sweepKeeper": "0x0e066A62DBAf86b09afCaF0B57Db9716dDeb8507"
+    },
+    "upgradeable": true
+  }
+}

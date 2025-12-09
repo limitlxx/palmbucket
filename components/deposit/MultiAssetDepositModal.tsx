@@ -180,16 +180,16 @@ export function MultiAssetDepositModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+      <div className="glass max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
+        <div className="flex items-center justify-between p-6 border-b border-white/10">
+          <h2 className="text-xl font-semibold text-foreground">
             Deposit to {vaultName}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -202,18 +202,18 @@ export function MultiAssetDepositModal({
           {step === 'success' ? (
             /* Success State */
             <div className="text-center py-8">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Deposit Successful!</h3>
-              <p className="text-sm text-gray-600 mb-6">
+              <h3 className="text-lg font-semibold text-foreground mb-2">Deposit Successful!</h3>
+              <p className="text-sm text-muted-foreground mb-6">
                 Your funds have been deposited to {vaultName}
               </p>
               <button
                 onClick={onClose}
-                className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                className="px-6 py-2 bg-emerald-500 text-white rounded-md hover:bg-emerald-600 transition-colors"
               >
                 Close
               </button>
@@ -222,7 +222,7 @@ export function MultiAssetDepositModal({
             <>
               {/* Token Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Select Token
                 </label>
                 <TokenSelector
@@ -236,12 +236,12 @@ export function MultiAssetDepositModal({
               {selectedToken && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-muted-foreground">
                       Amount
                     </label>
                     <button
                       onClick={handleMaxClick}
-                      className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                      className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold"
                     >
                       MAX
                     </button>
@@ -252,16 +252,16 @@ export function MultiAssetDepositModal({
                       value={depositAmount}
                       onChange={e => setDepositAmount(e.target.value)}
                       placeholder="0.0"
-                      className="w-full px-4 py-3 pr-20 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-3 pr-20 bg-background border border-white/10 rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:border-emerald-500"
                       step="any"
                       min="0"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-600">
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
                       {selectedToken.symbol}
                     </span>
                   </div>
                   {parseUnits(depositAmount || '0', selectedToken.decimals) > selectedToken.balance && (
-                    <p className="mt-1 text-xs text-red-600">Insufficient balance</p>
+                    <p className="mt-1 text-xs text-red-400">Insufficient balance</p>
                   )}
                 </div>
               )}
@@ -311,7 +311,7 @@ export function MultiAssetDepositModal({
               <button
                 onClick={handleSubmit}
                 disabled={!isFormValid || isApprovePending || isDepositPending}
-                className="w-full px-4 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 bg-emerald-500 text-white rounded-lg font-semibold hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isApprovePending ? (
                   <span className="flex items-center justify-center gap-2">
@@ -332,7 +332,7 @@ export function MultiAssetDepositModal({
 
               {/* Info Text */}
               {selectedToken && !selectedToken.isNative && (
-                <p className="text-xs text-gray-500 text-center">
+                <p className="text-xs text-muted-foreground text-center">
                   {allowance && quote && (allowance as bigint) >= quote.depositAmount
                     ? 'Token approved. Click to deposit.'
                     : 'You need to approve the token before depositing.'}

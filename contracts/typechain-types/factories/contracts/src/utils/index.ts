@@ -2,3 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export { SwapHelper__factory } from "./SwapHelper__factory";
+export { SwapHelperUpgradeable__factory } from "./SwapHelperUpgradeable__factory";

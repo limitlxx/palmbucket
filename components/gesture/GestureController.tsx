@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Hands, Results } from '@mediapipe/hands'
 import { Camera } from '@mediapipe/camera_utils'
 import { GestureData, GestureType } from '@/types'
@@ -430,139 +431,244 @@ export function GestureController({ onGesture }: GestureControllerProps) {
             playsInline
           />
           
-          {/* AR Cursor with Orbiting Dots and Ribbons */}
-          {cursorPosition && (
-            <div
-              className="fixed pointer-events-none z-[9999] transition-transform duration-75"
-              style={{
-                left: `${cursorPosition.x}px`,
-                top: `${cursorPosition.y}px`,
-                transform: 'translate(-50%, -50%)'
-              }}
-            >
-              {/* Ribbon trail effect */}
-              <div className={`absolute inset-0 rounded-full transition-all duration-300 ${
-                hoveredElement 
-                  ? 'w-20 h-20 -m-10 bg-gradient-to-r from-green-400/20 via-green-300/10 to-transparent animate-spin-slow' 
-                  : 'w-16 h-16 -m-8 bg-gradient-to-r from-blue-400/20 via-blue-300/10 to-transparent animate-spin-slow'
-              }`} style={{ animationDuration: '3s' }} />
-              
-              {/* Outer glow ring */}
-              <div className={`absolute inset-0 rounded-full transition-all duration-200 ${
-                hoveredElement 
-                  ? 'w-16 h-16 -m-8 bg-green-400/30 animate-pulse' 
-                  : 'w-12 h-12 -m-6 bg-blue-400/20'
-              }`} />
-              
-              {/* Orbiting dots */}
-              <div className="absolute inset-0 w-12 h-12 -m-6 animate-spin" style={{ animationDuration: '2s' }}>
-                <div className="absolute top-0 left-1/2 w-2 h-2 -ml-1 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50" />
-              </div>
-              <div className="absolute inset-0 w-12 h-12 -m-6 animate-spin" style={{ animationDuration: '2.5s', animationDirection: 'reverse' }}>
-                <div className="absolute bottom-0 left-1/2 w-2 h-2 -ml-1 bg-purple-400 rounded-full shadow-lg shadow-purple-400/50" />
-              </div>
-              <div className="absolute inset-0 w-12 h-12 -m-6 animate-spin" style={{ animationDuration: '3s' }}>
-                <div className="absolute left-0 top-1/2 w-2 h-2 -mt-1 bg-pink-400 rounded-full shadow-lg shadow-pink-400/50" />
-              </div>
-              
-              {/* Main cursor orb with enhanced glow */}
-              <div className={`relative w-8 h-8 rounded-full transition-all duration-200 ${
-                isPinching 
-                  ? 'bg-gradient-to-br from-green-400 to-green-600 scale-75 shadow-2xl shadow-green-500/70 animate-pulse' 
-                  : hoveredElement
-                  ? 'bg-gradient-to-br from-green-300 to-green-500 scale-110 shadow-2xl shadow-green-400/70'
-                  : 'bg-gradient-to-br from-blue-400 to-blue-600 shadow-2xl shadow-blue-500/70'
-              }`}>
-                {/* Inner highlight */}
-                <div className="absolute top-1.5 left-1.5 w-3 h-3 bg-white/70 rounded-full blur-sm" />
-                <div className="absolute top-2 left-2 w-2 h-2 bg-white rounded-full" />
-              </div>
-              
-              {/* Hover indicator */}
-              {hoveredElement && !isPinching && (
-                <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/90 text-white text-xs px-3 py-1.5 rounded-full shadow-lg animate-bounce">
-                  👆 Pinch to click
-                </div>
-              )}
-            </div>
-          )}
-          
-          {/* Action log at bottom left */}
-          {actionLog.length > 0 && (
-            <div className="fixed bottom-4 left-4 z-50 space-y-2">
-              {actionLog.map((action, index) => (
-                <div
-                  key={`${action}-${index}`}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium bg-black/80 text-white shadow-lg transition-all duration-300 ${
-                    index === 0 ? 'scale-100 opacity-100' : 'scale-95 opacity-70'
+          {/* AR Cursor with Framer Motion Animations */}
+          <AnimatePresence>
+            {cursorPosition && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0 }}
+                className="fixed pointer-events-none z-[9999]"
+                style={{
+                  left: `${cursorPosition.x}px`,
+                  top: `${cursorPosition.y}px`,
+                  x: '-50%',
+                  y: '-50%'
+                }}
+              >
+                {/* Ripple effect for pinch */}
+                <AnimatePresence>
+                  {isPinching && (
+                    <motion.div
+                      initial={{ scale: 0.5, opacity: 1 }}
+                      animate={{ scale: 2.5, opacity: 0 }}
+                      exit={{ scale: 0.5, opacity: 0 }}
+                      transition={{ duration: 0.6, ease: "easeOut" }}
+                      className="absolute inset-0 w-16 h-16 -m-8 rounded-full bg-emerald-400/50"
+                    />
+                  )}
+                </AnimatePresence>
+                
+                {/* Ribbon trail effect */}
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  className={`absolute inset-0 rounded-full ${
+                    hoveredElement 
+                      ? 'w-20 h-20 -m-10 bg-gradient-to-r from-emerald-400/20 via-emerald-300/10 to-transparent' 
+                      : 'w-16 h-16 -m-8 bg-gradient-to-r from-blue-400/20 via-blue-300/10 to-transparent'
                   }`}
-                  style={{ 
-                    transform: `translateY(${index * -5}px)`,
-                    zIndex: 50 - index
-                  }}
+                />
+                
+                {/* Outer glow ring */}
+                <motion.div 
+                  animate={hoveredElement ? { scale: [1, 1.1, 1] } : {}}
+                  transition={{ duration: 1, repeat: Infinity }}
+                  className={`absolute inset-0 rounded-full ${
+                    hoveredElement 
+                      ? 'w-16 h-16 -m-8 bg-emerald-400/30' 
+                      : 'w-12 h-12 -m-6 bg-blue-400/20'
+                  }`}
+                />
+                
+                {/* Orbiting dots with Framer Motion */}
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 w-12 h-12 -m-6"
                 >
-                  {action}
-                </div>
-              ))}
-            </div>
-          )}
+                  <motion.div 
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                    className="absolute top-0 left-1/2 w-2 h-2 -ml-1 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50" 
+                  />
+                </motion.div>
+                <motion.div 
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 w-12 h-12 -m-6"
+                >
+                  <motion.div 
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 1.2, repeat: Infinity }}
+                    className="absolute bottom-0 left-1/2 w-2 h-2 -ml-1 bg-purple-400 rounded-full shadow-lg shadow-purple-400/50" 
+                  />
+                </motion.div>
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 w-12 h-12 -m-6"
+                >
+                  <motion.div 
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="absolute left-0 top-1/2 w-2 h-2 -mt-1 bg-pink-400 rounded-full shadow-lg shadow-pink-400/50" 
+                  />
+                </motion.div>
+                
+                {/* Main cursor orb with enhanced glow */}
+                <motion.div 
+                  animate={{
+                    scale: isPinching ? 0.75 : hoveredElement ? 1.1 : 1
+                  }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  className={`relative w-8 h-8 rounded-full ${
+                    isPinching 
+                      ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-2xl shadow-emerald-500/70' 
+                      : hoveredElement
+                      ? 'bg-gradient-to-br from-emerald-300 to-emerald-500 shadow-2xl shadow-emerald-400/70'
+                      : 'bg-gradient-to-br from-blue-400 to-blue-600 shadow-2xl shadow-blue-500/70'
+                  }`}
+                >
+                  {/* Inner highlight */}
+                  <div className="absolute top-1.5 left-1.5 w-3 h-3 bg-white/70 rounded-full blur-sm" />
+                  <div className="absolute top-2 left-2 w-2 h-2 bg-white rounded-full" />
+                </motion.div>
+                
+                {/* Hover indicator */}
+                <AnimatePresence>
+                  {hoveredElement && !isPinching && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      className="absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap glass text-foreground text-xs px-3 py-1.5 rounded-full shadow-lg"
+                    >
+                      👆 Pinch to click
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
           
-          {/* Status indicator at bottom right */}
-          <div className="fixed bottom-4 right-4 z-50 space-y-2">
-            <div className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
-              isPinching 
-                ? 'bg-green-500 text-white shadow-lg scale-110' 
-                : cursorPosition
-                ? 'bg-blue-500/80 text-white shadow-md'
-                : 'bg-gray-700/80 text-gray-300 shadow-md'
-            }`}>
-              {isPinching ? '👌 Pinching!' : cursorPosition ? '👋 Hand Detected' : '🖐️ Show Your Hand'}
-            </div>
-            
-            {/* Debug info with mobile indicators */}
-            {isInitialized && (
-              <div className="px-2 py-1 rounded text-xs bg-black/60 text-white">
-                {isMobile && '📱 '}Camera: {isInitialized ? '✓' : '✗'} | 
-                {batterySaving && ' 🔋 '}
-                Cursor: {cursorPosition ? `${Math.round(cursorPosition.x)},${Math.round(cursorPosition.y)}` : 'None'}
+          {/* Action log at bottom left with Framer Motion */}
+          <AnimatePresence>
+            {actionLog.length > 0 && (
+              <div className="fixed bottom-4 left-4 z-50 space-y-2">
+                {actionLog.map((action, index) => (
+                  <motion.div
+                    key={`${action}-${index}`}
+                    initial={{ opacity: 0, x: -20, scale: 0.8 }}
+                    animate={{ 
+                      opacity: index === 0 ? 1 : 0.7, 
+                      x: 0, 
+                      scale: index === 0 ? 1 : 0.95,
+                      y: index * -5
+                    }}
+                    exit={{ opacity: 0, x: -20, scale: 0.8 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    className="glass px-3 py-2 rounded-lg text-sm font-medium text-foreground shadow-lg"
+                    style={{ zIndex: 50 - index }}
+                  >
+                    {action}
+                  </motion.div>
+                ))}
               </div>
             )}
+          </AnimatePresence>
+          
+          {/* Status indicator at bottom right with Framer Motion */}
+          <div className="fixed bottom-4 right-4 z-50 space-y-2">
+            <motion.div 
+              animate={{
+                scale: isPinching ? 1.1 : 1
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className={`glass px-3 py-2 rounded-lg text-sm font-semibold shadow-lg ${
+                isPinching 
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
+                  : cursorPosition
+                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/40'
+                  : 'text-muted-foreground border border-white/10'
+              }`}
+            >
+              {isPinching ? '👌 Pinching!' : cursorPosition ? '👋 Hand Detected' : '🖐️ Show Your Hand'}
+            </motion.div>
+            
+            {/* Debug info with mobile indicators */}
+            <AnimatePresence>
+              {isInitialized && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="glass px-2 py-1 rounded text-xs text-muted-foreground"
+                >
+                  {isMobile && '📱 '}Camera: {isInitialized ? '✓' : '✗'} | 
+                  {batterySaving && ' 🔋 '}
+                  Cursor: {cursorPosition ? `${Math.round(cursorPosition.x)},${Math.round(cursorPosition.y)}` : 'None'}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           
           {/* Error message with fallback info */}
-          {(error || gestureError) && (
-            <div className="fixed top-20 right-4 z-50 max-w-sm bg-red-500 text-white text-sm p-4 rounded-lg shadow-lg">
-              <p className="font-semibold">Gesture Recognition Error</p>
-              <p className="mt-1">{error || getGestureErrorMessage(gestureError)}</p>
-              {fallbackMode && (
-                <p className="mt-2 text-xs opacity-90">
-                  ℹ️ Traditional input methods are available
-                </p>
-              )}
-              {gestureError && (
-                <button
-                  onClick={async () => {
-                    setError(null)
-                    const success = await retryGesture()
-                    if (success) {
-                      // Re-enable gestures
-                      setEnabled(true)
-                    }
-                  }}
-                  className="mt-2 px-3 py-1 bg-white text-red-600 rounded text-xs font-medium hover:bg-red-50 transition-colors"
-                >
-                  Retry
-                </button>
-              )}
-            </div>
-          )}
+          <AnimatePresence>
+            {(error || gestureError) && (
+              <motion.div 
+                initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                className="fixed top-20 right-4 z-50 max-w-sm glass border border-red-500/40 bg-red-500/10 text-red-400 text-sm p-4 rounded-lg shadow-lg"
+              >
+                <p className="font-semibold">Gesture Recognition Error</p>
+                <p className="mt-1">{error || getGestureErrorMessage(gestureError)}</p>
+                {fallbackMode && (
+                  <p className="mt-2 text-xs opacity-90">
+                    ℹ️ Traditional input methods are available
+                  </p>
+                )}
+                {gestureError && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={async () => {
+                      setError(null)
+                      const success = await retryGesture()
+                      if (success) {
+                        // Re-enable gestures
+                        setEnabled(true)
+                      }
+                    }}
+                    className="mt-2 px-3 py-1 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700 transition-colors"
+                  >
+                    Retry
+                  </motion.button>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
           
           {/* Initializing message */}
-          {!isInitialized && !error && (
-            <div className="fixed top-20 right-4 z-50 bg-blue-500 text-white text-sm px-4 py-3 rounded-lg shadow-lg animate-pulse">
-              <p className="font-semibold">📷 Initializing camera...</p>
-            </div>
-          )}
+          <AnimatePresence>
+            {!isInitialized && !error && (
+              <motion.div 
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="fixed top-20 right-4 z-50 glass border border-blue-500/40 bg-blue-500/10 text-blue-400 text-sm px-4 py-3 rounded-lg shadow-lg"
+              >
+                <motion.p 
+                  animate={{ opacity: [1, 0.5, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="font-semibold"
+                >
+                  📷 Initializing camera...
+                </motion.p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </>
       )}
     </>

@@ -118,7 +118,7 @@ export function SplitRatioSettings() {
 
   if (!address) {
     return (
-      <div className="p-6 text-center text-gray-500">
+      <div className="p-6 text-center text-muted-foreground">
         Please connect your wallet to configure split ratios
       </div>
     )
@@ -127,24 +127,24 @@ export function SplitRatioSettings() {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2">Split Ratio Configuration</h2>
-        <p className="text-gray-600">
+        <h2 className="text-2xl font-bold text-foreground mb-2">Split Ratio Configuration</h2>
+        <p className="text-muted-foreground">
           Configure how your incoming payments are automatically split across your buckets
         </p>
       </div>
 
       {/* Presets */}
       <div className="space-y-3">
-        <h3 className="text-lg font-semibold">Quick Presets</h3>
+        <h3 className="text-lg font-semibold text-foreground">Quick Presets</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {RATIO_PRESETS.map((preset) => (
             <button
               key={preset.name}
               onClick={() => applyPreset(preset)}
-              className="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 transition-colors text-left"
+              className="p-4 border border-white/20 rounded-lg hover:border-blue-500/60 hover:bg-white/5 transition-all text-left"
             >
-              <div className="font-semibold mb-1">{preset.name}</div>
-              <div className="text-sm text-gray-600">{preset.description}</div>
+              <div className="font-semibold text-foreground mb-1">{preset.name}</div>
+              <div className="text-sm text-muted-foreground">{preset.description}</div>
             </button>
           ))}
         </div>
@@ -152,19 +152,19 @@ export function SplitRatioSettings() {
 
       {/* Custom Ratios */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Custom Ratios</h3>
+        <h3 className="text-lg font-semibold text-foreground">Custom Ratios</h3>
         
         {ratios.map((ratio, index) => (
           <div key={index} className="space-y-2">
             <div className="flex justify-between items-center">
-              <label className="font-medium flex items-center gap-2">
+              <label className="font-medium text-foreground flex items-center gap-2">
                 <span
                   className="w-4 h-4 rounded-full"
                   style={{ backgroundColor: BUCKET_COLORS[index] }}
                 />
                 {BUCKET_NAMES[index]}
               </label>
-              <span className="text-lg font-bold">{ratio}%</span>
+              <span className="text-lg font-bold text-foreground">{ratio}%</span>
             </div>
             <input
               type="range"
@@ -174,7 +174,7 @@ export function SplitRatioSettings() {
               onChange={(e) => handleRatioChange(index, parseInt(e.target.value))}
               className="w-full h-2 rounded-lg appearance-none cursor-pointer"
               style={{
-                background: `linear-gradient(to right, ${BUCKET_COLORS[index]} 0%, ${BUCKET_COLORS[index]} ${ratio}%, #e5e7eb ${ratio}%, #e5e7eb 100%)`
+                background: `linear-gradient(to right, ${BUCKET_COLORS[index]} 0%, ${BUCKET_COLORS[index]} ${ratio}%, rgba(255,255,255,0.1) ${ratio}%, rgba(255,255,255,0.1) 100%)`
               }}
             />
           </div>
@@ -182,20 +182,21 @@ export function SplitRatioSettings() {
       </div>
 
       {/* Total Indicator */}
-      <div className="p-4 rounded-lg border-2" style={{
-        borderColor: isValid ? '#10B981' : '#EF4444',
-        backgroundColor: isValid ? '#F0FDF4' : '#FEF2F2'
-      }}>
+      <div className={`p-4 rounded-lg border transition-all ${
+        isValid 
+          ? 'border-emerald-500/40 bg-emerald-500/10' 
+          : 'border-red-500/40 bg-red-500/10'
+      }`}>
         <div className="flex justify-between items-center">
-          <span className="font-semibold">Total:</span>
-          <span className="text-2xl font-bold" style={{
-            color: isValid ? '#10B981' : '#EF4444'
-          }}>
+          <span className="font-semibold text-foreground">Total:</span>
+          <span className={`text-2xl font-bold ${
+            isValid ? 'text-emerald-400' : 'text-red-400'
+          }`}>
             {total}%
           </span>
         </div>
         {!isValid && (
-          <div className="mt-2 text-sm text-red-600">
+          <div className="mt-2 text-sm text-red-400">
             Total must equal 100%. Current: {total}%
             {total < 100 && ` (${100 - total}% remaining)`}
             {total > 100 && ` (${total - 100}% over)`}
@@ -208,14 +209,14 @@ export function SplitRatioSettings() {
         <button
           onClick={autoBalance}
           disabled={total === 100}
-          className="px-4 py-2 border-2 border-gray-300 rounded-lg hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 border border-white/20 rounded-lg hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-foreground"
         >
           Auto-Balance
         </button>
         <button
           onClick={handleSave}
           disabled={!isValid || !isDirty || routePaymentStatus.status === 'pending'}
-          className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {routePaymentStatus.status === 'pending' ? 'Saving...' : 
            routePaymentStatus.status === 'confirming' ? 'Confirming...' :
@@ -225,12 +226,12 @@ export function SplitRatioSettings() {
 
       {/* Status Messages */}
       {routePaymentStatus.status === 'success' && (
-        <div className="p-4 bg-green-50 border-2 border-green-500 rounded-lg text-green-700">
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/40 rounded-lg text-emerald-400">
           ✓ Split ratios saved successfully!
         </div>
       )}
       {routePaymentStatus.status === 'error' && (
-        <div className="p-4 bg-red-50 border-2 border-red-500 rounded-lg text-red-700">
+        <div className="p-4 bg-red-500/10 border border-red-500/40 rounded-lg text-red-400">
           ✗ Failed to save ratios. Please try again.
         </div>
       )}

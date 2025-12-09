@@ -140,7 +140,7 @@ export function TokenSelector({
       {/* Selected Token Display */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg flex items-center justify-between hover:border-gray-400 transition-colors"
+        className="w-full px-4 py-3 glass border border-white/10 rounded-lg flex items-center justify-between hover:border-white/20 transition-colors"
       >
         {selectedToken ? (
           <div className="flex items-center gap-3">
@@ -148,17 +148,17 @@ export function TokenSelector({
               {selectedToken.symbol.charAt(0)}
             </div>
             <div className="text-left">
-              <div className="font-medium text-gray-900">{selectedToken.symbol}</div>
-              <div className="text-xs text-gray-500">
+              <div className="font-medium text-foreground">{selectedToken.symbol}</div>
+              <div className="text-xs text-muted-foreground">
                 Balance: {formatUnits(selectedToken.balance, selectedToken.decimals).slice(0, 8)}
               </div>
             </div>
           </div>
         ) : (
-          <span className="text-gray-500">Select a token</span>
+          <span className="text-muted-foreground">Select a token</span>
         )}
         <svg
-          className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-5 h-5 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -169,15 +169,15 @@ export function TokenSelector({
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-hidden">
+        <div className="absolute z-50 w-full mt-2 glass border border-white/10 rounded-lg shadow-lg max-h-96 overflow-hidden">
           {/* Search Input */}
-          <div className="p-3 border-b border-gray-200">
+          <div className="p-3 border-b border-white/10">
             <input
               type="text"
               placeholder="Search tokens..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 glass border border-white/10 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-foreground placeholder:text-muted-foreground"
               autoFocus
             />
           </div>
@@ -185,12 +185,12 @@ export function TokenSelector({
           {/* Token List */}
           <div className="overflow-y-auto max-h-80">
             {isLoadingTokens || isLoadingSupportedTokens ? (
-              <div className="p-4 text-center text-gray-500">
+              <div className="p-4 text-center text-muted-foreground">
                 <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
                 <div className="mt-2">Loading tokens...</div>
               </div>
             ) : filteredTokens.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
+              <div className="p-4 text-center text-muted-foreground">
                 {searchQuery ? 'No tokens found' : 'No supported tokens available'}
               </div>
             ) : (
@@ -198,20 +198,20 @@ export function TokenSelector({
                 <button
                   key={token.address}
                   onClick={() => handleTokenSelect(token)}
-                  className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                  className="w-full px-4 py-3 flex items-center gap-3 hover:bg-card/50 transition-colors border-b border-white/5 last:border-b-0"
                 >
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold">
                     {token.symbol.charAt(0)}
                   </div>
                   <div className="flex-1 text-left">
-                    <div className="font-medium text-gray-900">{token.symbol}</div>
-                    <div className="text-sm text-gray-500">{token.name}</div>
+                    <div className="font-medium text-foreground">{token.symbol}</div>
+                    <div className="text-sm text-muted-foreground">{token.name}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-foreground">
                       {formatUnits(token.balance, token.decimals).slice(0, 10)}
                     </div>
-                    <div className="text-xs text-gray-500">Balance</div>
+                    <div className="text-xs text-muted-foreground">Balance</div>
                   </div>
                 </button>
               ))

@@ -180,13 +180,14 @@ export function AutoSplitToggle({
   return (
     <div className="space-y-4">
       {/* Status Display */}
-      <div className="flex items-center justify-between p-4 border-2 rounded-lg" style={{
-        borderColor: isEnabled ? '#10B981' : '#E5E7EB',
-        backgroundColor: isEnabled ? '#F0FDF4' : '#F9FAFB'
-      }}>
+      <div className={`flex items-center justify-between p-4 rounded-lg border transition-all ${
+        isEnabled 
+          ? 'border-emerald-500/40 bg-emerald-500/10' 
+          : 'border-white/10 bg-card/50'
+      }`}>
         <div>
-          <div className="font-semibold">Auto-Split for {tokenSymbol}</div>
-          <div className="text-sm text-gray-600">
+          <div className="font-semibold text-foreground">Auto-Split for {tokenSymbol}</div>
+          <div className="text-sm text-muted-foreground">
             {isEnabled 
               ? 'Enabled - Payments will be automatically split'
               : 'Disabled - Manual splitting required'}
@@ -195,10 +196,10 @@ export function AutoSplitToggle({
         <button
           onClick={handleToggleClick}
           disabled={isPending || isConfirming}
-          className={`px-6 py-2 rounded-lg font-semibold transition-colors ${
+          className={`px-6 py-2 rounded-lg font-semibold transition-all ${
             isEnabled
               ? 'bg-red-600 hover:bg-red-700 text-white'
-              : 'bg-green-600 hover:bg-green-700 text-white'
+              : 'bg-emerald-600 hover:bg-emerald-700 text-white'
           } disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           {isPending || isConfirming
@@ -211,7 +212,7 @@ export function AutoSplitToggle({
 
       {/* Approval Status */}
       {!hasApproval && !isEnabled && (
-        <div className="p-4 bg-yellow-50 border-2 border-yellow-500 rounded-lg text-yellow-800 text-sm">
+        <div className="p-4 bg-amber-500/10 border border-amber-500/40 rounded-lg text-amber-400 text-sm">
           <strong>Note:</strong> Enabling auto-split requires a one-time token approval. 
           You'll be asked to approve unlimited {tokenSymbol} spending for the PaymentRouter contract.
         </div>
@@ -219,35 +220,35 @@ export function AutoSplitToggle({
 
       {/* Confirmation Dialog */}
       {showConfirmDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold mb-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="glass max-w-md w-full mx-4 p-6">
+            <h3 className="text-xl font-bold text-foreground mb-4">
               {actionType === 'enable' ? 'Enable Auto-Split?' : 'Disable Auto-Split?'}
             </h3>
             
             {actionType === 'enable' ? (
               <div className="space-y-3 mb-6">
-                <p className="text-gray-700">
+                <p className="text-muted-foreground">
                   This will enable automatic payment splitting for {tokenSymbol}. 
                 </p>
                 {!hasApproval && (
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm">
+                  <div className="p-3 bg-blue-500/10 border border-blue-500/40 rounded-lg text-sm text-blue-400">
                     <strong>Step 1:</strong> You'll first approve unlimited {tokenSymbol} spending
                     <br />
                     <strong>Step 2:</strong> Then enable auto-split in the PaymentRouter
                   </div>
                 )}
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Once enabled, incoming {tokenSymbol} payments will be automatically split 
                   according to your configured ratios without requiring additional approvals.
                 </p>
               </div>
             ) : (
               <div className="space-y-3 mb-6">
-                <p className="text-gray-700">
+                <p className="text-muted-foreground">
                   This will disable automatic payment splitting for {tokenSymbol}.
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   You'll need to manually split payments after disabling. 
                   For full security, you should also revoke the token approval in your wallet.
                 </p>
@@ -257,15 +258,15 @@ export function AutoSplitToggle({
             <div className="flex gap-3">
               <button
                 onClick={cancelAction}
-                className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg hover:border-gray-400"
+                className="flex-1 px-4 py-2 border border-white/20 rounded-lg hover:bg-white/10 transition-colors text-foreground"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmAction}
-                className={`flex-1 px-4 py-2 rounded-lg font-semibold text-white ${
+                className={`flex-1 px-4 py-2 rounded-lg font-semibold text-white transition-colors ${
                   actionType === 'enable'
-                    ? 'bg-green-600 hover:bg-green-700'
+                    ? 'bg-emerald-600 hover:bg-emerald-700'
                     : 'bg-red-600 hover:bg-red-700'
                 }`}
               >
