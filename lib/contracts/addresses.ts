@@ -11,6 +11,10 @@ export const contractAddresses = {
       growth: process.env.NEXT_PUBLIC_GROWTH_VAULT_ADDRESS as Address || '0x',
       spendable: process.env.NEXT_PUBLIC_SPENDABLE_VAULT_ADDRESS as Address || '0x',
     },
+    billsVault: process.env.NEXT_PUBLIC_BILLS_VAULT_ADDRESS as Address || '0x',
+    savingsVault: process.env.NEXT_PUBLIC_SAVINGS_VAULT_ADDRESS as Address || '0x',
+    growthVault: process.env.NEXT_PUBLIC_GROWTH_VAULT_ADDRESS as Address || '0x',
+    spendableVault: process.env.NEXT_PUBLIC_SPENDABLE_VAULT_ADDRESS as Address || '0x',
     sweepKeeper: process.env.NEXT_PUBLIC_SWEEP_KEEPER_ADDRESS as Address || '0x',
   },
   [mantle.id]: {
@@ -21,6 +25,10 @@ export const contractAddresses = {
       growth: process.env.NEXT_PUBLIC_GROWTH_VAULT_ADDRESS as Address || '0x',
       spendable: process.env.NEXT_PUBLIC_SPENDABLE_VAULT_ADDRESS as Address || '0x',
     },
+    billsVault: process.env.NEXT_PUBLIC_BILLS_VAULT_ADDRESS as Address || '0x',
+    savingsVault: process.env.NEXT_PUBLIC_SAVINGS_VAULT_ADDRESS as Address || '0x',
+    growthVault: process.env.NEXT_PUBLIC_GROWTH_VAULT_ADDRESS as Address || '0x',
+    spendableVault: process.env.NEXT_PUBLIC_SPENDABLE_VAULT_ADDRESS as Address || '0x',
     sweepKeeper: process.env.NEXT_PUBLIC_SWEEP_KEEPER_ADDRESS as Address || '0x',
   },
 }

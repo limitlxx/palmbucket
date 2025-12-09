@@ -4,25 +4,53 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { Hands, Results } from '@mediapipe/hands'
 import { Camera } from '@mediapipe/camera_utils'
 import { GestureData, GestureType } from '@/types'
+import { useGestureFallback, getGestureErrorMessage } from '@/lib/hooks'
 
 interface GestureControllerProps {
   onGesture?: (gesture: GestureData) => void
 }
 
 const GESTURE_ENABLED_KEY = 'palmbudget_gesture_enabled'
-const PINCH_THRESHOLD = 40 // pixels
-const SWIPE_THRESHOLD = 150 // pixels
+const BATTERY_SAVING_KEY = 'palmbudget_battery_saving'
+
+// Device detection
+const isMobileDevice = () => {
+  if (typeof window === 'undefined') return false
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+         (window.innerWidth <= 768)
+}
+
+// Mobile-optimized thresholds
+const PINCH_THRESHOLD_DESKTOP = 40 // pixels
+const PINCH_THRESHOLD_MOBILE = 50 // pixels - slightly larger for touch screens
+const SWIPE_THRESHOLD_DESKTOP = 150 // pixels
+const SWIPE_THRESHOLD_MOBILE = 120 // pixels - shorter for smaller screens
 const SWIPE_COOLDOWN = 500 // milliseconds
+
+// Battery saving mode settings
+const BATTERY_SAVING_FPS = 15 // Lower frame rate for battery saving
+const NORMAL_FPS = 30 // Normal frame rate
 
 export function GestureController({ onGesture }: GestureControllerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isInitialized, setIsInitialized] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [enabled, setEnabled] = useState(false)
+  const [batterySaving, setBatterySaving] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const [isPinching, setIsPinching] = useState(false)
   const [cursorPosition, setCursorPosition] = useState<{ x: number; y: number } | null>(null)
   const [hoveredElement, setHoveredElement] = useState<Element | null>(null)
   const [actionLog, setActionLog] = useState<string[]>([])
+  
+  // Gesture fallback handling
+  const {
+    isGestureAvailable,
+    fallbackMode,
+    gestureError,
+    handleGestureError,
+    retryGesture,
+  } = useGestureFallback()
   
   // Track hand position for swipe detection
   const previousPositionRef = useRef<{ x: number; y: number } | null>(null)
@@ -30,11 +58,25 @@ export function GestureController({ onGesture }: GestureControllerProps) {
   const lastSwipeTimeRef = useRef<number>(0)
   const lastPinchStateRef = useRef<boolean>(false)
 
-  // Load gesture enabled state from localStorage on mount
+  // Load gesture enabled state and detect mobile on mount
   useEffect(() => {
     const stored = localStorage.getItem(GESTURE_ENABLED_KEY)
     if (stored !== null) {
       setEnabled(stored === 'true')
+    }
+    
+    const batterySaved = localStorage.getItem(BATTERY_SAVING_KEY)
+    if (batterySaved !== null) {
+      setBatterySaving(batterySaved === 'true')
+    }
+    
+    // Detect if mobile device
+    setIsMobile(isMobileDevice())
+    
+    // Auto-enable battery saving on mobile by default
+    if (isMobileDevice() && batterySaved === null) {
+      setBatterySaving(true)
+      localStorage.setItem(BATTERY_SAVING_KEY, 'true')
     }
   }, [])
 
@@ -43,6 +85,15 @@ export function GestureController({ onGesture }: GestureControllerProps) {
     setEnabled(prev => {
       const newValue = !prev
       localStorage.setItem(GESTURE_ENABLED_KEY, String(newValue))
+      return newValue
+    })
+  }, [])
+  
+  // Toggle battery saving mode
+  const toggleBatterySaving = useCallback(() => {
+    setBatterySaving(prev => {
+      const newValue = !prev
+      localStorage.setItem(BATTERY_SAVING_KEY, String(newValue))
       return newValue
     })
   }, [])
@@ -64,7 +115,7 @@ export function GestureController({ onGesture }: GestureControllerProps) {
         el.tagName === 'BUTTON' ||
         el.tagName === 'A' ||
         el.getAttribute('role') === 'button' ||
-        el.onclick !== null ||
+        (el as HTMLElement).onclick !== null ||
         window.getComputedStyle(el).cursor === 'pointer'
       ) {
         return el
@@ -171,32 +222,52 @@ export function GestureController({ onGesture }: GestureControllerProps) {
           }
         })
 
+        // Mobile-optimized settings
+        const isMobileNow = isMobileDevice()
         hands.setOptions({
           maxNumHands: 1,
-          modelComplexity: 1,
-          minDetectionConfidence: 0.5,
-          minTrackingConfidence: 0.5
+          modelComplexity: isMobileNow ? 0 : 1, // Lower complexity on mobile for performance
+          minDetectionConfidence: isMobileNow ? 0.6 : 0.5, // Higher confidence on mobile to reduce false positives
+          minTrackingConfidence: isMobileNow ? 0.6 : 0.5
         })
 
         hands.onResults(onResults)
 
-        // Initialize camera
+        // Initialize camera with mobile-optimized settings
         if (videoRef.current) {
+          const isMobileNow = isMobileDevice()
+          const targetFps = batterySaving ? BATTERY_SAVING_FPS : NORMAL_FPS
+          
           camera = new Camera(videoRef.current, {
             onFrame: async () => {
               if (hands && videoRef.current) {
                 await hands.send({ image: videoRef.current })
               }
             },
-            width: 640,
-            height: 480
+            // Lower resolution on mobile for better performance
+            width: isMobileNow ? 480 : 640,
+            height: isMobileNow ? 360 : 480,
+            // Use front camera on mobile
+            facingMode: isMobileNow ? 'user' : undefined
           })
 
           await camera.start()
           setIsInitialized(true)
         }
       } catch (err) {
-        setError('Failed to initialize gesture recognition: ' + (err as Error).message)
+        const error = err instanceof Error ? err : new Error('Unknown error')
+        setError('Failed to initialize gesture recognition: ' + error.message)
+        
+        // Determine error type
+        if (error.message.includes('camera') || error.message.includes('Camera')) {
+          handleGestureError(error, 'camera')
+        } else if (error.message.includes('permission') || error.message.includes('Permission')) {
+          handleGestureError(error, 'permission')
+        } else if (error.message.includes('MediaPipe') || error.message.includes('mediapipe')) {
+          handleGestureError(error, 'mediapipe')
+        } else {
+          handleGestureError(error, 'unknown')
+        }
       }
     }
 
@@ -230,12 +301,17 @@ export function GestureController({ onGesture }: GestureControllerProps) {
       const thumbTip = landmarks[4]
       const indexTip = landmarks[8]
       
+      // Use device-specific thresholds
+      const isMobileNow = isMobileDevice()
+      const pinchThreshold = isMobileNow ? PINCH_THRESHOLD_MOBILE : PINCH_THRESHOLD_DESKTOP
+      const swipeThreshold = isMobileNow ? SWIPE_THRESHOLD_MOBILE : SWIPE_THRESHOLD_DESKTOP
+      
       const distance = Math.sqrt(
         Math.pow((thumbTip.x - indexTip.x) * 640, 2) + 
         Math.pow((thumbTip.y - indexTip.y) * 480, 2)
       )
       
-      const currentlyPinching = distance < PINCH_THRESHOLD
+      const currentlyPinching = distance < pinchThreshold
       setIsPinching(currentlyPinching)
 
       // Swipe detection: check if all 5 fingers are extended (open palm)
@@ -276,7 +352,7 @@ export function GestureController({ onGesture }: GestureControllerProps) {
         
         // Check if movement is primarily horizontal and exceeds threshold
         const now = Date.now()
-        if (Math.abs(deltaX) > SWIPE_THRESHOLD && deltaY < 100 && now - lastSwipeTimeRef.current > SWIPE_COOLDOWN) {
+        if (Math.abs(deltaX) > swipeThreshold && deltaY < 100 && now - lastSwipeTimeRef.current > SWIPE_COOLDOWN) {
           lastSwipeTimeRef.current = now
           swipeStartRef.current = null
           previousPositionRef.current = null
@@ -309,12 +385,12 @@ export function GestureController({ onGesture }: GestureControllerProps) {
         hands.close()
       }
     }
-  }, [enabled, dispatchGestureEvent])
+  }, [enabled, batterySaving, dispatchGestureEvent, handleGestureError, retryGesture])
 
   return (
     <>
-      {/* Toggle button */}
-      <div className="fixed top-4 right-4 z-50">
+      {/* Toggle buttons */}
+      <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
         <button
           onClick={toggleGesture}
           className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 shadow-lg ${
@@ -325,7 +401,22 @@ export function GestureController({ onGesture }: GestureControllerProps) {
           aria-label={enabled ? 'Disable gesture control' : 'Enable gesture control'}
         >
           {enabled ? '👋 Gestures ON' : '🖱️ Gestures OFF'}
+          {isMobile && <span className="ml-1 text-xs">📱</span>}
         </button>
+        
+        {enabled && isMobile && (
+          <button
+            onClick={toggleBatterySaving}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 shadow-md ${
+              batterySaving 
+                ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white' 
+                : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
+            }`}
+            aria-label={batterySaving ? 'Disable battery saving' : 'Enable battery saving'}
+          >
+            {batterySaving ? '🔋 Battery Saving' : '⚡ Performance'}
+          </button>
+        )}
       </div>
 
       {enabled && (
@@ -428,19 +519,41 @@ export function GestureController({ onGesture }: GestureControllerProps) {
               {isPinching ? '👌 Pinching!' : cursorPosition ? '👋 Hand Detected' : '🖐️ Show Your Hand'}
             </div>
             
-            {/* Debug info */}
+            {/* Debug info with mobile indicators */}
             {isInitialized && (
               <div className="px-2 py-1 rounded text-xs bg-black/60 text-white">
-                Camera: {isInitialized ? '✓' : '✗'} | Cursor: {cursorPosition ? `${Math.round(cursorPosition.x)},${Math.round(cursorPosition.y)}` : 'None'}
+                {isMobile && '📱 '}Camera: {isInitialized ? '✓' : '✗'} | 
+                {batterySaving && ' 🔋 '}
+                Cursor: {cursorPosition ? `${Math.round(cursorPosition.x)},${Math.round(cursorPosition.y)}` : 'None'}
               </div>
             )}
           </div>
           
-          {/* Error message */}
-          {error && (
+          {/* Error message with fallback info */}
+          {(error || gestureError) && (
             <div className="fixed top-20 right-4 z-50 max-w-sm bg-red-500 text-white text-sm p-4 rounded-lg shadow-lg">
-              <p className="font-semibold">Camera Error</p>
-              <p className="mt-1">{error}</p>
+              <p className="font-semibold">Gesture Recognition Error</p>
+              <p className="mt-1">{error || getGestureErrorMessage(gestureError)}</p>
+              {fallbackMode && (
+                <p className="mt-2 text-xs opacity-90">
+                  ℹ️ Traditional input methods are available
+                </p>
+              )}
+              {gestureError && (
+                <button
+                  onClick={async () => {
+                    setError(null)
+                    const success = await retryGesture()
+                    if (success) {
+                      // Re-enable gestures
+                      setEnabled(true)
+                    }
+                  }}
+                  className="mt-2 px-3 py-1 bg-white text-red-600 rounded text-xs font-medium hover:bg-red-50 transition-colors"
+                >
+                  Retry
+                </button>
+              )}
             </div>
           )}
           

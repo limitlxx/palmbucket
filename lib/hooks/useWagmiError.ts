@@ -3,7 +3,7 @@ import { BaseError } from 'wagmi'
 
 /**
  * Custom hook for handling wagmi errors with user-friendly messages
- * Provides error parsing and notification capabilities
+ * Provides error parsing, logging, and notification capabilities
  */
 export function useWagmiError(error: Error | null) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -14,16 +14,26 @@ export function useWagmiError(error: Error | null) {
       return
     }
 
+    // Log error for monitoring
+    console.error('Wagmi error occurred:', error)
+    
+    // Log to external error tracking service if available
+    if (typeof window !== 'undefined' && (window as any).errorTracker) {
+      (window as any).errorTracker.captureException(error, {
+        context: 'useWagmiError',
+      })
+    }
+
     // Parse wagmi/viem errors
     if (error instanceof BaseError) {
-      const revertError = error.walk(err => err instanceof BaseError)
+      const revertError = error.walk(err => err instanceof BaseError) as BaseError | null
       
       if (revertError) {
         // Extract user-friendly error message
-        const message = revertError.shortMessage || revertError.message
+        const message = (revertError as any).shortMessage || revertError.message
         
         // Common error patterns
-        if (message.includes('User rejected')) {
+        if (message.includes('User rejected') || message.includes('user rejected')) {
           setErrorMessage('Transaction was rejected by user')
         } else if (message.includes('insufficient funds')) {
           setErrorMessage('Insufficient funds for transaction')
@@ -31,6 +41,10 @@ export function useWagmiError(error: Error | null) {
           setErrorMessage('Gas estimation failed. Please try again.')
         } else if (message.includes('nonce')) {
           setErrorMessage('Transaction nonce error. Please refresh and try again.')
+        } else if (message.includes('network') || message.includes('connection')) {
+          setErrorMessage('Network connection issue. Please check your connection.')
+        } else if (message.includes('Chain mismatch')) {
+          setErrorMessage('Wrong network. Please switch to Mantle Network.')
         } else {
           setErrorMessage(message)
         }
@@ -38,7 +52,14 @@ export function useWagmiError(error: Error | null) {
         setErrorMessage(error.message)
       }
     } else {
-      setErrorMessage(error.message)
+      // Handle non-wagmi errors
+      if (error.message.includes('RPC')) {
+        setErrorMessage('Unable to connect to blockchain. Please try again.')
+      } else if (error.message.includes('wallet') || error.message.includes('Wallet')) {
+        setErrorMessage('Wallet connection issue. Please reconnect your wallet.')
+      } else {
+        setErrorMessage(error.message)
+      }
     }
   }, [error])
 

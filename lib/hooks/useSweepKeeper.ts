@@ -13,11 +13,11 @@ export function useSweepKeeper(contractAddress: Address) {
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash })
   const [lastSweepEvent, setLastSweepEvent] = useState<any>(null)
 
-  // Read optimal destination for sweep
+  // Read highest yield bucket for sweep
   const { data: optimalDestination, refetch: refetchOptimalDestination } = useReadContract({
     address: contractAddress,
     abi: sweepKeeperAbi,
-    functionName: 'getOptimalDestination',
+    functionName: 'getHighestYieldBucket',
   })
 
   // Watch for sweep events
@@ -31,19 +31,22 @@ export function useSweepKeeper(contractAddress: Address) {
         setLastSweepEvent({
           user: latestLog.args.user,
           amount: latestLog.args.amount,
-          destination: latestLog.args.destination,
-          timestamp: Date.now(),
+          fromBucket: latestLog.args.fromBucket,
+          toBucket: latestLog.args.toBucket,
+          expectedYield: latestLog.args.expectedYield,
+          timestamp: latestLog.args.timestamp,
         })
       }
     },
   })
 
   // Execute sweep
-  const executeSweep = () => {
+  const executeSweep = (userAddress: Address) => {
     return writeContract({
       address: contractAddress,
       abi: sweepKeeperAbi,
       functionName: 'executeSweep',
+      args: [userAddress],
     })
   }
 

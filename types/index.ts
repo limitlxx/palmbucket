@@ -1,7 +1,7 @@
 import { Address } from 'viem'
 
 // Bucket types
-export type BucketType = 'Bills' | 'Savings' | 'Growth' | 'Spendable'
+export type BucketType = 'bills' | 'savings' | 'growth' | 'spendable'
 
 // Split ratios (must sum to 100)
 export interface SplitRatios {
