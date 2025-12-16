@@ -174,17 +174,17 @@ export function PortfolioSummary() {
       </div>
 
       {/* Expected Returns */}
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-800">Expected Returns</h3>
+      <div className="bg-black/50 border rounded-lg shadow-lg p-6">
+        <h3 className="text-lg font-semibold mb-4">Expected Returns</h3>
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-green-50 rounded-lg p-4">
-            <p className="text-sm text-gray-600 mb-1">Monthly</p>
+          <div className="border rounded-lg p-4">
+            <p className="text-sm mb-1">Monthly</p>
             <p className="text-2xl font-bold text-green-600">
               ${formatEther(portfolioMetrics.expectedMonthlyReturn)}
             </p>
           </div>
-          <div className="bg-green-50 rounded-lg p-4">
-            <p className="text-sm text-gray-600 mb-1">Annually</p>
+          <div className="border rounded-lg p-4">
+            <p className="text-sm mb-1">Annually</p>
             <p className="text-2xl font-bold text-green-600">
               ${formatEther(portfolioMetrics.expectedAnnualReturn)}
             </p>
@@ -196,11 +196,11 @@ export function PortfolioSummary() {
       </div>
 
       {/* Bucket Allocation */}
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-800">Bucket Allocation</h3>
+      <div className="bg-black/50 border rounded-lg shadow-lg p-6">
+        <h3 className="text-lg font-semibold">Bucket Allocation</h3>
         
         {/* Visual Bar */}
-        <div className="flex h-8 rounded-lg overflow-hidden mb-4">
+        <div className="flex rounded-lg overflow-hidden mb-4">
           {portfolioMetrics.bucketPercentages.map((bucket, index) => (
             bucket.percentage > 0 && (
               <div
@@ -219,13 +219,13 @@ export function PortfolioSummary() {
             <div key={index} className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className={`w-3 h-3 rounded-full ${bucket.color}`} />
-                <span className="font-medium text-gray-700">{bucket.name}</span>
+                <span className="font-medium">{bucket.name}</span>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-gray-800">
+                <p className="font-semibold">
                   ${formatEther(bucket.balance)}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs">
                   {bucket.percentage.toFixed(1)}%
                 </p>
               </div>
@@ -235,8 +235,8 @@ export function PortfolioSummary() {
       </div>
 
       {/* Yield Comparison */}
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-800">Yield Comparison</h3>
+      <div className="bg-black/50 border rounded-lg shadow-lg p-6">
+        <h3 className="text-lg font-semibold mb-4 ">Yield Comparison</h3>
         
         <div className="space-y-3">
           {portfolioMetrics.bucketPercentages
@@ -250,10 +250,10 @@ export function PortfolioSummary() {
               return (
                 <div key={index}>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium text-gray-700">{bucket.name}</span>
+                    <span className="font-medium">{bucket.name}</span>
                     <span className="text-gray-600">{yieldPercent.toFixed(2)}% APY</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bborder rounded-full h-2">
                     <div
                       className={`h-2 rounded-full ${bucket.color} transition-all duration-500`}
                       style={{ width: `${barWidth}%` }}
@@ -265,7 +265,7 @@ export function PortfolioSummary() {
         </div>
 
         {portfolioMetrics.bestPerforming && (
-          <div className="mt-4 p-3 bg-green-50 rounded-lg">
+          <div className="mt-4 p-3 bg-black/50 border rounded-lg">
             <p className="text-sm text-gray-600">
               <span className="font-semibold text-green-700">
                 {portfolioMetrics.bestPerforming.name}
@@ -280,26 +280,26 @@ export function PortfolioSummary() {
       </div>
 
       {/* Performance Indicators */}
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-800">Performance Indicators</h3>
+      <div className="bg-black/50 rounded-lg shadow-lg p-6">
+        <h3 className="text-lg font-semibold mb-4">Performance Indicators</h3>
         
         <div className="grid grid-cols-2 gap-4">
-          <div className="text-center p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-1">ROI (Annual)</p>
+          <div className="text-center p-4 border rounded-lg">
+            <p className="text-sm mb-1">ROI (Annual)</p>
             <p className="text-2xl font-bold text-blue-600">
               {(Number(portfolioMetrics.weightedYieldRate) / 100).toFixed(2)}%
             </p>
           </div>
           
-          <div className="text-center p-4 bg-purple-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-1">Monthly Growth</p>
+          <div className="text-center p-4 border rounded-lg">
+            <p className="text-sm mb-1">Monthly Growth</p>
             <p className="text-2xl font-bold text-purple-600">
               {monthOverMonthGrowth > 0 ? '+' : ''}{monthOverMonthGrowth.toFixed(2)}%
             </p>
           </div>
         </div>
 
-        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+        <div className="mt-4 p-3 border rounded-lg">
           <p className="text-xs text-gray-600">
             💡 <span className="font-medium">Tip:</span> Your portfolio is earning an average of{' '}
             <span className="font-semibold">

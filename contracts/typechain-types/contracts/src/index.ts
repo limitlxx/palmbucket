@@ -18,6 +18,7 @@ export type { vaults };
 export type { BucketVault } from "./BucketVault";
 export type { BucketVaultV2 } from "./BucketVaultV2";
 export type { BucketVaultV3 } from "./BucketVaultV3";
+export type { ExpenseContract } from "./ExpenseContract";
 export type { MockERC20 } from "./MockERC20";
 export type { MockYieldProtocol } from "./MockYieldProtocol";
 export type { PaymentRouter } from "./PaymentRouter";

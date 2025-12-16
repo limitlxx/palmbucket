@@ -54,71 +54,108 @@ export class RainbowKitErrorBoundary extends Component<
       }
 
       return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-gray-50">
-          <div className="max-w-md w-full bg-white border border-gray-200 rounded-lg shadow-lg p-8">
+        <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+          {/* Background gradient orbs */}
+          <div className="fixed inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-0 -left-4 w-96 h-96 bg-orange-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob" />
+            <div className="absolute top-0 -right-4 w-96 h-96 bg-yellow-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000" />
+            <div className="absolute -bottom-8 left-20 w-96 h-96 bg-red-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000" />
+          </div>
+          
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="relative z-10 max-w-md w-full glass p-8"
+          >
             <div className="text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg
-                  className="w-8 h-8 text-orange-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                className="w-16 h-16 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-orange-500/40"
+              >
+                <Wallet className="w-8 h-8 text-orange-400" />
+              </motion.div>
+              <motion.h2
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-2xl font-bold text-foreground mb-3"
+              >
                 Wallet Connection Issue
-              </h2>
-              <p className="text-gray-600 mb-6">
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-muted-foreground mb-6 leading-relaxed"
+              >
                 We encountered a problem connecting to your wallet. This might be due to:
-              </p>
-              <ul className="text-left text-sm text-gray-600 mb-6 space-y-2">
+              </motion.p>
+              <motion.ul
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="text-left text-sm text-muted-foreground mb-6 space-y-2"
+              >
                 <li className="flex items-start gap-2">
-                  <span className="text-orange-500 mt-0.5">•</span>
+                  <AlertCircle className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
                   <span>Your wallet extension is not installed or enabled</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-orange-500 mt-0.5">•</span>
+                  <AlertCircle className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
                   <span>Browser compatibility issues</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-orange-500 mt-0.5">•</span>
+                  <AlertCircle className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
                   <span>Network connectivity problems</span>
                 </li>
-              </ul>
-              <div className="space-y-3">
-                <button
+              </motion.ul>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="space-y-3"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={this.reset}
-                  className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                  className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                 >
+                  <Wallet className="w-4 h-4" />
                   Try Again
-                </button>
-                <button
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => window.location.reload()}
-                  className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                  className="w-full px-4 py-3 border border-white/20 text-foreground rounded-lg font-medium hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
                 >
+                  <RefreshCw className="w-4 h-4" />
                   Refresh Page
-                </button>
-              </div>
-              <p className="mt-6 text-xs text-gray-500">
+                </motion.button>
+              </motion.div>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.7 }}
+                className="mt-6 text-xs text-muted-foreground"
+              >
                 Need help?{' '}
                 <a
                   href="https://learn.rainbow.me/connect-your-wallet"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-700 underline"
+                  className="text-blue-400 hover:text-blue-300 underline inline-flex items-center gap-1"
                 >
                   Learn how to connect your wallet
+                  <ExternalLink className="w-3 h-3" />
                 </a>
-              </p>
+              </motion.p>
             </div>
-          </div>
+          </motion.div>
         </div>
       )
     }

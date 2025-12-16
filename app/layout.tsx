@@ -3,7 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import '@rainbow-me/rainbowkit/styles.css';
 import { Providers } from "@/components/providers/WagmiProvider";
-import { GestureController } from "@/components/gesture/GestureController";
+// import { GestureController } from "@/components/gesture/GestureController";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 
@@ -36,7 +36,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Providers>
-            <GestureController />
+            {/* <GestureController /> */}
             {children}
             <Toaster />
           </Providers>

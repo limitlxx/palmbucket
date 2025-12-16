@@ -70,6 +70,8 @@ export type { BucketVaultV2 } from "./contracts/src/BucketVaultV2";
 export { BucketVaultV2__factory } from "./factories/contracts/src/BucketVaultV2__factory";
 export type { BucketVaultV3 } from "./contracts/src/BucketVaultV3";
 export { BucketVaultV3__factory } from "./factories/contracts/src/BucketVaultV3__factory";
+export type { ExpenseContract } from "./contracts/src/ExpenseContract";
+export { ExpenseContract__factory } from "./factories/contracts/src/ExpenseContract__factory";
 export type { IDEXRouter } from "./contracts/src/interfaces/IDEXRouter";
 export { IDEXRouter__factory } from "./factories/contracts/src/interfaces/IDEXRouter__factory";
 export type { IAToken } from "./contracts/src/interfaces/ILendle.sol/IAToken";

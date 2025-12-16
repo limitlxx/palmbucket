@@ -99,6 +99,7 @@ export default function SettingsPage() {
             </div>
             <SweepKeeperAdminControls tokenDecimals={6} />
           </motion.div>
+          
         </div>
       </div>
     </div>

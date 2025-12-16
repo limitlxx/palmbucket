@@ -142,6 +142,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.BucketVaultV3__factory>;
     getContractFactory(
+      name: "ExpenseContract",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ExpenseContract__factory>;
+    getContractFactory(
       name: "IDEXRouter",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IDEXRouter__factory>;
@@ -447,6 +451,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.BucketVaultV3>;
     getContractAt(
+      name: "ExpenseContract",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ExpenseContract>;
+    getContractAt(
       name: "IDEXRouter",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
@@ -756,6 +765,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.BucketVaultV3>;
     deployContract(
+      name: "ExpenseContract",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ExpenseContract>;
+    deployContract(
       name: "IDEXRouter",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.IDEXRouter>;
@@ -1060,6 +1073,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.BucketVaultV3>;
+    deployContract(
+      name: "ExpenseContract",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ExpenseContract>;
     deployContract(
       name: "IDEXRouter",
       args: any[],

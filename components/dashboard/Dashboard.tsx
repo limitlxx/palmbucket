@@ -207,12 +207,7 @@ export function Dashboard() {
           className="mb-8"
         >
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-4xl font-bold text-foreground mb-2">Dashboard</h1>
-              <p className="text-muted-foreground">
-                Manage your buckets and track your portfolio
-              </p>
-            </div>
+           
             <div className="flex items-center gap-4">
               <Link
                 href="/mint"
@@ -235,15 +230,6 @@ export function Dashboard() {
 
         {/* Main Content */}
         <div className="space-y-6">
-          {/* Portfolio Summary */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="glass p-6"
-          >
-            <PortfolioSummary />
-          </motion.div>
 
           {/* Bucket Cards Grid */}
           <motion.div
@@ -253,7 +239,13 @@ export function Dashboard() {
             className="glass p-6"
           >
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-foreground mb-2">Your Buckets</h2>
+               <div>
+              <h1 className="text-4xl font-bold text-foreground mb-2">Your Buckets</h1>
+              <p className="text-muted-foreground">
+                Manage your buckets and track your portfolio
+              </p>
+            </div>
+              {/* <h2 className="text-2xl font-bold text-foreground mb-2">Your Buckets</h2> */}
               {showDestinationSelector && (
                 <p className="text-emerald-400 text-sm">
                   👆 Select destination bucket for transfer
@@ -351,6 +343,16 @@ export function Dashboard() {
                 </button>
               </div>
             )}
+          </motion.div>
+
+          {/* Portfolio Summary */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="glass p-6"
+          >
+            <PortfolioSummary />
           </motion.div>
 
           {/* Yield Summary Section with Dynamic Tracking */}

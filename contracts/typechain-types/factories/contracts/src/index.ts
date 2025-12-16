@@ -11,6 +11,7 @@ export * as vaults from "./vaults";
 export { BucketVault__factory } from "./BucketVault__factory";
 export { BucketVaultV2__factory } from "./BucketVaultV2__factory";
 export { BucketVaultV3__factory } from "./BucketVaultV3__factory";
+export { ExpenseContract__factory } from "./ExpenseContract__factory";
 export { MockERC20__factory } from "./MockERC20__factory";
 export { MockYieldProtocol__factory } from "./MockYieldProtocol__factory";
 export { PaymentRouter__factory } from "./PaymentRouter__factory";

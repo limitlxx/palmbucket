@@ -2534,6 +2534,47 @@
       "artifacts": [
         "ISweepKeeper"
       ]
+    },
+    "/home/limitlxx/limitlxx/palm-budget/contracts/src/ExpenseContract.sol": {
+      "lastModificationDate": 1765730750008,
+      "contentHash": "f5d87eb28bec77e1716610bd8ac97fd2",
+      "sourceName": "contracts/src/ExpenseContract.sol",
+      "solcConfig": {
+        "version": "0.8.22",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata",
+                "storageLayout"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/access/Ownable.sol",
+        "@openzeppelin/contracts/utils/ReentrancyGuard.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "ExpenseContract"
+      ]
     }
   }
 }
